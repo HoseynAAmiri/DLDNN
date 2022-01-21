@@ -11,8 +11,8 @@ def streamplot(x, y, u, v, start_point):
     v = np.ma.masked_invalid(v)
 
     integrate = _get_integrator(u, v, dmap)
-
     sp = np.asanyarray(start_point, dtype=float).copy()
+    
     xs = sp[0]
     ys = sp[1]
     # Check if start_points are outside the data boundaries
