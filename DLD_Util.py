@@ -48,11 +48,11 @@ class DLD_Util():
 
         return x_mapped, y_mapped
 
-    def interp2grid(self, x_mapped, y_mapped, data_mapped, x_grid, y_grid):
+    def interp2grid(self, x_mapped, y_mapped, data_mapped, x_grid, y_grid, method='linear'):
         # Interpolation of mapped data to x & y grid
         mapped = np.array([x_mapped, y_mapped]).T
         data_interp = griddata(mapped, data_mapped,
-                               (x_grid, y_grid), method='nearest')
+                               (x_grid, y_grid), method=method)
 
         return np.nan_to_num(data_interp)
 
@@ -152,9 +152,9 @@ class DLD_Util():
         with open(folder + '\\information.csv', 'w') as f:
             writer = csv.writer(f)
             writer.writerows(information)
-        
+
         pbar = tqdm(total=data_size, position=0, leave=True)
-        
+
         for d in D:
             folder = cd + "\\Data\\D{}".format(d)
             os.makedirs(folder)
@@ -176,7 +176,7 @@ class DLD_Util():
                                 d, d, n, g, re)
                         self.result.export("data1").set("filename", filename)
                         self.result.export("data1").run()
-                        
+
                         pbar.update(1)
                         time.sleep(0.1)
 
@@ -203,7 +203,7 @@ class DLD_Util():
             folder_dir = directory + "\\" + folder
             filesname = [os.path.splitext(filename)[0]
                          for filename in os.listdir(folder_dir)]
-            
+
             pbar1.update(1)
             time.sleep(0.1)
 

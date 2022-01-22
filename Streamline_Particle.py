@@ -12,7 +12,7 @@ def streamplot(x, y, u, v, start_point):
 
     integrate = _get_integrator(u, v, dmap)
     sp = np.asanyarray(start_point, dtype=float).copy()
-    
+
     xs = sp[0]
     ys = sp[1]
     # Check if start_points are outside the data boundaries
@@ -21,17 +21,11 @@ def streamplot(x, y, u, v, start_point):
         raise ValueError("Starting point ({}, {}) outside of data "
                          "boundaries".format(xs, ys))
 
-    # Convert start_point from data to array coords
-    # Shift the seed points from the bottom left of the data so that
-    # data2grid works properly.
     xs -= grid.x_origin
     ys -= grid.y_origin
 
     xg, yg = dmap.data2grid(xs, ys)
-    # Floating point issues can cause xg, yg to be slightly out of
-    # bounds for xs, ys on the upper boundaries. Because we have
-    # already checked that the starting points are within the original
-    # grid, clip the xg, yg to the grid to work around this issue
+
     xg = np.clip(xg, 0, grid.nx - 1)
     yg = np.clip(yg, 0, grid.ny - 1)
 
@@ -40,20 +34,13 @@ def streamplot(x, y, u, v, start_point):
     return np.divide(trajectory, [dmap.x_data2grid,  dmap.y_data2grid])
 
 
-class StreamplotSet:
-
-    def __init__(self, lines, arrows):
-        self.lines = lines
-        self.arrows = arrows
-
-
 # Coordinate definitions
 # ========================
 
 class DomainMap:
     def __init__(self, grid):
         self.grid = grid
-        # Constants for conversion between grid- and mask-coordinates
+        
         self.x_data2grid = 1. / grid.dx
         self.y_data2grid = 1. / grid.dy
 
@@ -65,8 +52,6 @@ class DomainMap:
 
 
 class Grid:
-    """Grid of data."""
-
     def __init__(self, x, y):
 
         if np.ndim(x) == 1:
@@ -163,10 +148,12 @@ def _get_integrator(u, v, dmap):
         xy_traj += xyt[1:]
 
         return np.broadcast_arrays(xy_traj, np.empty((1, 2)))[0]
-        
+
     return integrate
 
 # @_api.deprecated("3.5")
+
+
 def get_integrator(u, v, dmap):
     xy_traj = _get_integrator(u, v, dmap)
     return (None if xy_traj is None
