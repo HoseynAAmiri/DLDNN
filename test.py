@@ -5,9 +5,9 @@ m = utl()
 data_psi = np.genfromtxt("psi.csv", delimiter=",")
 data_p = np.genfromtxt("p.csv", delimiter=",")
 
-data = np.concatenate((data_psi, np.array([data_p[:,2]]).T), axis=1)
-x = data[:,0]
-y = data[:,1]
+data = np.concatenate((data_psi, np.array([data_p[:, 2]]).T), axis=1)
+x = data[:, 0]
+y = data[:, 1]
 
 
 data = np.nan_to_num(data)
