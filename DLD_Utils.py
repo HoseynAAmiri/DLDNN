@@ -6,8 +6,12 @@ import time
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.interpolate import griddata
+from shapely import affinity
+from shapely.geometry import Point
+from shapely.geometry.polygon import Polygon
 from tqdm import tqdm
-import Streamline_Particle as spt
+from math import atan
+import particle_tracing as spt
 
 '''
 DLD_Util provides a variety of tasks from data generation
@@ -16,9 +20,60 @@ grid size
 '''
 
 
-class DLD_Util():
-    def __init__(self):
-        pass
+class DLD_Utils():
+    def __init__(self, resolution=(100, 100), pillar_type='circle'):
+        self.pillar_type = pillar_type
+
+    def pillar_mask(self, grid, D, N, G_X, G_R=1):
+        pillar1 = self.pillar(D)
+        pillar2 = affinity.translate(pillar1, xoff=D+G_X, yoff=(D+G_X*G_R)/N)
+        pillar3 = affinity.translate(pillar1, yoff=(D+G_X*G_R))
+        pillar4 = affinity.translate(pillar2, yoff=(D+G_X*G_R))
+
+        pillar1s = affinity.skew(
+            pillar1, ys=-atan(1/N), origin=(0, 0), use_radians=True)
+        pillar2s = affinity.skew(
+            pillar2, ys=-atan(1/N), origin=(0, 0), use_radians=True)
+        pillar3s = affinity.skew(
+            pillar3, ys=-atan(1/N), origin=(0, 0), use_radians=True)
+        pillar4s = affinity.skew(
+            pillar4, ys=-atan(1/N), origin=(0, 0), use_radians=True)
+
+        pillar1ss = affinity.scale(
+            pillar1s, xfact=1/(D+G_X), yfact=1/(D+G_X*G_R), zfact=1.0, origin=(0, 0))
+        pillar2ss = affinity.scale(
+            pillar2s, xfact=1/(D+G_X), yfact=1/(D+G_X*G_R), zfact=1.0, origin=(0, 0))
+        pillar3ss = affinity.scale(
+            pillar3s, xfact=1/(D+G_X), yfact=1/(D+G_X*G_R), zfact=1.0, origin=(0, 0))
+        pillar4ss = affinity.scale(
+            pillar4s, xfact=1/(D+G_X), yfact=1/(D+G_X*G_R), zfact=1.0, origin=(0, 0))
+
+        grid_points = np.array([grid[0].flatten(), grid[1].flatten()]).T
+        grid_Points = [Point(p) for p in grid_points.tolist()]
+
+        def contains(points):
+            if pillar1ss.contains(points) or \
+                    pillar2ss.contains(points) or \
+                    pillar3ss.contains(points) or \
+                    pillar4ss.contains(points):
+                return True
+            else:
+                return False
+
+        mask = filter(contains, grid_Points)
+        mask_xy = np.array([p.coords[0] for p in mask])
+
+        return mask_xy
+
+    def pillar(self, D, pillar_org=(0, 0)):
+        # First makes one pillar
+        geometry_types = {'circle': 0, 'polygon': 1}
+        if geometry_types.get(self.pillar_type) == 0:
+            pillar = Point(pillar_org).buffer(D)
+        else:
+            pillar = Polygon([d for d in D])
+
+        return pillar
 
     def parall2square(self, x, y, slope, D, G_X, G_R=1):
         # Domain shear transformation from parallelogram to a rectangular
@@ -48,13 +103,13 @@ class DLD_Util():
 
         return x_mapped, y_mapped
 
-    def interp2grid(self, x_mapped, y_mapped, data_mapped, x_grid, y_grid):
+    def interp2grid(self, x_mapped, y_mapped, data_mapped, x_grid, y_grid, method='linear'):
         # Interpolation of mapped data to x & y grid
         mapped = np.array([x_mapped, y_mapped]).T
         data_interp = griddata(mapped, data_mapped,
-                               (x_grid, y_grid), method='nearest')
+                               (x_grid, y_grid), method=method)
 
-        return np.nan_to_num(data_interp)
+        return data_interp
 
     def compare_plots(self, data1, data2, figsize=(6, 6)):
 
@@ -64,17 +119,17 @@ class DLD_Util():
         fig = plt.figure(figsize=figsize)
         ax1 = fig.add_subplot(2, 2, 1)
         ax1.set_title("u (before)")
-        plt.scatter(x, y, c=u)
+        plt.scatter(x, y, s=0.1, c=u)
         ax2 = fig.add_subplot(2, 2, 2)
         ax2.set_title("v (before)")
-        plt.scatter(x, y, c=v)
+        plt.scatter(x, y, s=0.1, c=v)
 
         ax3 = fig.add_subplot(2, 2, 3)
         ax3.set_title("u (after)")
-        plt.scatter(x_new, y_new, c=u_new)
+        plt.scatter(x_new, y_new, s=0.1, c=u_new)
         ax4 = fig.add_subplot(2, 2, 4)
         ax4.set_title("v (after)")
-        plt.scatter(x_new, y_new, c=v_new)
+        plt.scatter(x_new, y_new, s=0.1, c=v_new)
 
         plt.show()
 
@@ -152,9 +207,9 @@ class DLD_Util():
         with open(folder + '\\information.csv', 'w') as f:
             writer = csv.writer(f)
             writer.writerows(information)
-        
+
         pbar = tqdm(total=data_size, position=0, leave=True)
-        
+
         for d in D:
             folder = cd + "\\Data\\D{}".format(d)
             os.makedirs(folder)
@@ -176,7 +231,7 @@ class DLD_Util():
                                 d, d, n, g, re)
                         self.result.export("data1").set("filename", filename)
                         self.result.export("data1").run()
-                        
+
                         pbar.update(1)
                         time.sleep(0.1)
 
@@ -203,7 +258,7 @@ class DLD_Util():
             folder_dir = directory + "\\" + folder
             filesname = [os.path.splitext(filename)[0]
                          for filename in os.listdir(folder_dir)]
-            
+
             pbar1.update(1)
             time.sleep(0.1)
 

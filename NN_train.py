@@ -1,9 +1,9 @@
 # import sys
 # sys.path.append('/content/drive/MyDrive/DLDNN/')
-import os 
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+
 from keras.models import load_model
 import matplotlib.pyplot as plt
+from DLD_Utils import DLD_Util as utl
 import numpy as np
 from DLD_Util import DLD_Util as utl
 from Alpha_NN import NeuralNetwork
