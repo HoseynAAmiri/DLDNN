@@ -10,7 +10,7 @@ N = 10
 G_X = 40
 G_R = 1
 
-pillar1 = Point((0, 0)).buffer(10)
+pillar1 = Point((0, 0)).buffer(D/2)
 pillar2 = affinity.translate(pillar1, xoff=D+G_X, yoff=(D+G_X*G_R)/N)
 pillar3 = affinity.translate(pillar1, yoff=(D+G_X*G_R))
 pillar4 = affinity.translate(pillar2, yoff=(D+G_X*G_R))
