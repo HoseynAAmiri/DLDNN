@@ -30,24 +30,32 @@ class DLD_Utils():
         pillar3 = affinity.translate(pillar1, yoff=(D+G_X*G_R))
         pillar4 = affinity.translate(pillar2, yoff=(D+G_X*G_R))
 
-        pillar1s = affinity.skew(pillar1, ys=-atan(1/N), origin=(0,0), use_radians=True)
-        pillar2s = affinity.skew(pillar2, ys=-atan(1/N), origin=(0,0), use_radians=True)
-        pillar3s = affinity.skew(pillar3, ys=-atan(1/N), origin=(0,0), use_radians=True)
-        pillar4s = affinity.skew(pillar4, ys=-atan(1/N), origin=(0,0), use_radians=True)
+        pillar1s = affinity.skew(
+            pillar1, ys=-atan(1/N), origin=(0, 0), use_radians=True)
+        pillar2s = affinity.skew(
+            pillar2, ys=-atan(1/N), origin=(0, 0), use_radians=True)
+        pillar3s = affinity.skew(
+            pillar3, ys=-atan(1/N), origin=(0, 0), use_radians=True)
+        pillar4s = affinity.skew(
+            pillar4, ys=-atan(1/N), origin=(0, 0), use_radians=True)
 
-        pillar1ss = affinity.scale(pillar1s, xfact=1/(D+G_X), yfact=1/(D+G_X*G_R), zfact=1.0, origin=(0,0))
-        pillar2ss = affinity.scale(pillar2s, xfact=1/(D+G_X), yfact=1/(D+G_X*G_R), zfact=1.0, origin=(0,0))
-        pillar3ss = affinity.scale(pillar3s, xfact=1/(D+G_X), yfact=1/(D+G_X*G_R), zfact=1.0, origin=(0,0))
-        pillar4ss = affinity.scale(pillar4s, xfact=1/(D+G_X), yfact=1/(D+G_X*G_R), zfact=1.0, origin=(0,0))
+        pillar1ss = affinity.scale(
+            pillar1s, xfact=1/(D+G_X), yfact=1/(D+G_X*G_R), zfact=1.0, origin=(0, 0))
+        pillar2ss = affinity.scale(
+            pillar2s, xfact=1/(D+G_X), yfact=1/(D+G_X*G_R), zfact=1.0, origin=(0, 0))
+        pillar3ss = affinity.scale(
+            pillar3s, xfact=1/(D+G_X), yfact=1/(D+G_X*G_R), zfact=1.0, origin=(0, 0))
+        pillar4ss = affinity.scale(
+            pillar4s, xfact=1/(D+G_X), yfact=1/(D+G_X*G_R), zfact=1.0, origin=(0, 0))
 
         grid_points = np.array([grid[0].flatten(), grid[1].flatten()]).T
         grid_Points = [Point(p) for p in grid_points.tolist()]
 
         def contains(points):
             if pillar1ss.contains(points) or \
-                pillar2ss.contains(points) or \
-                pillar3ss.contains(points) or \
-                pillar4ss.contains(points):
+                    pillar2ss.contains(points) or \
+                    pillar3ss.contains(points) or \
+                    pillar4ss.contains(points):
                 return True
             else:
                 return False
@@ -57,14 +65,14 @@ class DLD_Utils():
 
         return mask_xy
 
-    def pillar(self, D, pillar_org=(0,0)):
+    def pillar(self, D, pillar_org=(0, 0)):
         # First makes one pillar
         geometry_types = {'circle': 0, 'polygon': 1}
         if geometry_types.get(self.pillar_type) == 0:
-            pillar = Point(pillar_org).buffer(D) 
+            pillar = Point(pillar_org).buffer(D)
         else:
             pillar = Polygon([d for d in D])
-        
+
         return pillar
 
     def parall2square(self, x, y, slope, D, G_X, G_R=1):
