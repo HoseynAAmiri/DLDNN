@@ -6,8 +6,10 @@ import time
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.interpolate import griddata
+from shapely.geometry import Point
+from shapely.geometry.polygon import Polygon
 from tqdm import tqdm
-import Streamline_Particle as spt
+import particle_tracing as spt
 
 '''
 DLD_Util provides a variety of tasks from data generation
@@ -16,10 +18,18 @@ grid size
 '''
 
 
-class DLD_Util():
-    def __init__(self):
-        pass
+class DLD_Util(pillar_type='circle'):
+    def __init__(self, pillar_type):
+        self.pillar_type = pillar_type
 
+    def geometry(self, D, N, G, type='circle'):
+        geometry_types={'circle':0, 'Rectangle':1, 'Polygon':2}
+        if self.geometry_types.get(self.function_type) == 0:
+            self.feature_library = self.poly
+        elif self.geometry_types.get(self.function_type) == 1:
+            self.feature_library = self.fourier
+        else:
+            self.feature_library = self.general
     def parall2square(self, x, y, slope, D, G_X, G_R=1):
         # Domain shear transformation from parallelogram to a rectangular
         x_mapped = x
@@ -48,13 +58,24 @@ class DLD_Util():
 
         return x_mapped, y_mapped
 
+    def mask(self, xy, xy_grid):
+        x_mask = []
+        y_mask = []
+
+        # for x in xy_grid[0]:
+        #     for y in xy_grid[1]:
+        #         if x < xy[0]
+
+
+        return (x_mask, y_mask)
+
     def interp2grid(self, x_mapped, y_mapped, data_mapped, x_grid, y_grid, method='linear'):
         # Interpolation of mapped data to x & y grid
         mapped = np.array([x_mapped, y_mapped]).T
         data_interp = griddata(mapped, data_mapped,
                                (x_grid, y_grid), method=method)
 
-        return np.nan_to_num(data_interp)
+        return data_interp
 
     def compare_plots(self, data1, data2, figsize=(6, 6)):
 
@@ -64,17 +85,17 @@ class DLD_Util():
         fig = plt.figure(figsize=figsize)
         ax1 = fig.add_subplot(2, 2, 1)
         ax1.set_title("u (before)")
-        plt.scatter(x, y, c=u)
+        plt.scatter(x, y, s=0.1, c=u)
         ax2 = fig.add_subplot(2, 2, 2)
         ax2.set_title("v (before)")
-        plt.scatter(x, y, c=v)
+        plt.scatter(x, y, s=0.1, c=v)
 
         ax3 = fig.add_subplot(2, 2, 3)
         ax3.set_title("u (after)")
-        plt.scatter(x_new, y_new, c=u_new)
+        plt.scatter(x_new, y_new, s=0.1, c=u_new)
         ax4 = fig.add_subplot(2, 2, 4)
         ax4.set_title("v (after)")
-        plt.scatter(x_new, y_new, c=v_new)
+        plt.scatter(x_new, y_new, s=0.1, c=v_new)
 
         plt.show()
 
