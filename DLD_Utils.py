@@ -12,13 +12,12 @@ from math import atan
 import particle_trajectory as ptj
 
 '''
-DLD_Util provides a variety of tasks from data generation
-by given geometry and flow inputs based on the given
-grid size
+DLD_Utils provides a necessary tasks from creating pillar
+to handling results from the generation codes
 '''
 
 
-class DLD_Utils():
+class DLD_Utils:
     def __init__(self, resolution=(100, 100), pillar_type='circle'):
         self.pillar_type = pillar_type
         self.resolution = resolution
@@ -169,7 +168,9 @@ class DLD_Utils():
 
         plt.show()
 
-    def compile_data(self, grid_size=self.resolution):
+    def compile_data(self, grid_size=(100, 100)):
+
+        grid_size = self.resolution
 
         x_grid_size = grid_size[0]
         y_grid_size = grid_size[1]

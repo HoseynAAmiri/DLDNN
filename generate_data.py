@@ -70,15 +70,15 @@ def generate_data(simulator, D, N, G, Re):
                     pbar.update(1)
                     time.sleep(0.1)
 
-D = [10., 15., 20., 25., 30., 35., 40., 45., 50.]
-N = [3., 4., 5., 6., 7., 8., 9., 10.]
-G = [10., 15., 20., 25., 30., 35., 40., 45., 50.]
+D = [10, 15, 20, 25, 30, 35, 40, 45, 50]
+N = [3, 4, 5, 6, 7, 8, 9, 10]
+G = [10, 15, 20, 25, 30, 35, 40, 45, 50]
 Re = [0.1, 0.2, 0.4, 0.8, 1, 2, 4, 6, 8, 10, 15, 20, 25, 30]
 
 grid_size = (100, 100)
 
 m = utl()
-m.generate_data('DLD_COMSOL2.mph', D, N, G, Re)
+generate_data('DLD_COMSOL2.mph', D, N, G, Re)
 dataset = m.compile_data(grid_size = grid_size)
 m.save_data(dataset, 'dataset')
 # dataset = m.load_data('dataset')

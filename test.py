@@ -2,9 +2,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from DLD_Utils import DLD_Utils as utl
 
-
-
-
 m = utl()
 data = np.genfromtxt("Data4.csv", delimiter=",")
 
@@ -26,17 +23,15 @@ x_grid, y_grid = np.meshgrid(xx, yy)
 
 x_mapped, y_mapped = m.parall2square(data[:, 0], data[:, 1], 1/N, D, G_X)
 u_mapped, v_mapped = m.parall2square(data[:, 2], data[:, 3], 1/N, D, G_X)
-bnd[:,0], bnd[:,1] = m.parall2square(bnd[:,0], bnd[:,1], 1/N, D, G_X)
+
 points = np.array([x_mapped, y_mapped]).T
 
 plt.scatter(bnd[:,0], bnd[:,1], s=0.1)
 plt.show()
+
 '''
 u_interp = m.interp2grid(x_mapped, y_mapped, u_mapped, x_grid, y_grid, method='nearest')
 v_interp = m.interp2grid(x_mapped, y_mapped, v_mapped, x_grid, y_grid, method='nearest')
-
-
-
 
 compare = True
 
