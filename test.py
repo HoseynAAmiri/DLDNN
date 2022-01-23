@@ -1,14 +1,15 @@
-from DLD_Util import DLD_Util as utl
 import numpy as np
+import matplotlib.pyplot as plt
+from DLD_Util import DLD_Util as utl
+
+
+
 
 m = utl()
-data_psi = np.genfromtxt("psi.csv", delimiter=",")
-data_p = np.genfromtxt("p.csv", delimiter=",")
-
-data = np.concatenate((data_psi, np.array([data_p[:, 2]]).T), axis=1)
+data = np.genfromtxt("psi_p.csv", delimiter=",")
+bnd = np.genfromtxt("boundary.csv", delimiter=",")
 x = data[:, 0]
 y = data[:, 1]
-
 
 data = np.nan_to_num(data)
 N = 10
@@ -25,11 +26,16 @@ x_grid, y_grid = np.meshgrid(xx, yy)
 
 x_mapped, y_mapped = m.parall2square(data[:, 0], data[:, 1], 1/N, D, G_X)
 u_mapped, v_mapped = m.parall2square(data[:, 2], data[:, 3], 1/N, D, G_X)
+bnd[:,0], bnd[:,1] = m.parall2square(bnd[:,0], bnd[:,1], 1/N, D, G_X)
+points = np.array([x_mapped, y_mapped]).T
 
+plt.scatter(bnd[:,0], bnd[:,1], s=0.1)
+plt.show()
+'''
 u_interp = m.interp2grid(x_mapped, y_mapped, u_mapped, x_grid, y_grid, method='nearest')
 v_interp = m.interp2grid(x_mapped, y_mapped, v_mapped, x_grid, y_grid, method='nearest')
 
-print(u_interp)
+
 
 
 compare = True
@@ -40,7 +46,7 @@ data2 = tuple([x_grid.flatten(), y_grid.flatten(),
 if compare:
     m.compare_plots(data1, data2)
 
-'''
+
 x_original, y_original = m.square2parall(x_grid, y_grid, 1/N, D, G_X)
 u_original, v_original = m.square2parall(u_interp, v_interp, 1/N, D, G_X)
 
