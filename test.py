@@ -2,15 +2,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 from DLD_Utils import DLD_Utils as utl
 
-data = np.genfromtxt("Data4.csv", delimiter=",")
-
-x = data[:, 0]
-y = data[:, 1]
-
-data = np.nan_to_num(data)
+utl = utl()
+data = np.genfromtxt("psi_p.csv", delimiter=",")
 N = 10
 D = 20
 G_X = 40
+G_R = 1
 
 grid_size = (100, 100)
 x_grid_size = grid_size[0]
@@ -23,21 +20,29 @@ x_grid, y_grid = np.meshgrid(xx, yy)
 x_mapped, y_mapped = utl.parall2square(data[:, 0], data[:, 1], 1/N, D, G_X)
 u_mapped, v_mapped = utl.parall2square(data[:, 2], data[:, 3], 1/N, D, G_X)
 
-points = np.array([x_mapped, y_mapped]).T
+data1 = tuple([x_mapped, y_mapped, u_mapped, v_mapped])
 
-'''
+xy_mask, idx = utl.pillar_mask((x_grid, y_grid), D, N, G_X)
+# data_masked = utl.add_mask(data, xy_mask, mask_with=0)
+
+x_mapped = np.concatenate((x_mapped, data[:, 0]))
+y_mapped = np.concatenate((y_mapped, data[:, 1]))
+u_mapped = np.concatenate((u_mapped, data[:, 2]))
+v_mapped = np.concatenate((v_mapped, data[:, 3]))
+
 u_interp = utl.interp2grid(x_mapped, y_mapped, u_mapped, x_grid, y_grid, method='nearest')
 v_interp = utl.interp2grid(x_mapped, y_mapped, v_mapped, x_grid, y_grid, method='nearest')
+u_interp = utl.insert_mask(u_interp, idx, mask_with=0)
+v_interp = utl.insert_mask(v_interp, idx, mask_with=0)
 
-compare = True
-
-data1 = tuple([x_mapped, y_mapped, u_mapped, v_mapped])
 data2 = tuple([x_grid.flatten(), y_grid.flatten(),
                u_interp.flatten(), v_interp.flatten()])
+
+compare = True
 if compare:
     utl.compare_plots(data1, data2)
 
-
+'''
 x_original, y_original = utl.square2parall(x_grid, y_grid, 1/N, D, G_X)
 u_original, v_original = utl.square2parall(u_interp, v_interp, 1/N, D, G_X)
 

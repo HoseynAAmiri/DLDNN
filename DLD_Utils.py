@@ -59,22 +59,40 @@ class DLD_Utils:
                 return False
 
         mask = filter(contains, grid_Points)
-        xy_mask = np.array([p.coords[0] for p in mask])
+        idx = list(filter(lambda i: contains(
+            grid_Points[i]), range(len((grid_Points)))))
+        xy_mask = [p.coords[0] for p in mask]
 
-        return xy_mask
+        return np.array(xy_mask), idx
 
     def pillar(self, D, pillar_type=None, pillar_org=(0, 0)):
         # First makes one pillar
         if not pillar_type:
             pillar_type = self.pillar_type
-            
+
         geometry_types = {'circle': 0, 'polygon': 1}
         if geometry_types.get(pillar_type) == 0:
-            pillar = Point(pillar_org).buffer(D)
+            pillar = Point(pillar_org).buffer(D/2)
         else:
             pillar = Polygon([d for d in D])
 
         return pillar
+
+    def add_mask(self, data, mask, mask_with=0):
+        empty = np.empty((mask.shape[0], data.shape[1]-mask.shape[1]))
+        empty[:] = mask_with
+        mask_data = np.concatenate((mask, empty), axis=1)
+
+        return np.concatenate((data, mask_data))
+    
+    def insert_mask(self, data, idx, mask_with=0):
+        if len(data.shape) >= 2:
+            shape = data.shape
+            data = data.flatten()
+
+        data[idx] = mask_with
+
+        return data.reshape(shape)
 
     def parall2square(self, x, y, slope, D, G_X, G_R=1):
         # Domain shear transformation from parallelogram to rectangular
