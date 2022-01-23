@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from DLD_Util import DLD_Util as utl
+from DLD_Utils import DLD_Utils as utl
 
 
 

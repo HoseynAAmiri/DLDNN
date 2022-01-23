@@ -6,9 +6,11 @@ import time
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.interpolate import griddata
+from shapely import affinity
 from shapely.geometry import Point
 from shapely.geometry.polygon import Polygon
 from tqdm import tqdm
+from math import atan
 import particle_tracing as spt
 
 '''
@@ -18,18 +20,53 @@ grid size
 '''
 
 
-class DLD_Util(pillar_type='circle'):
-    def __init__(self, pillar_type):
+class DLD_Utils():
+    def __init__(self, resolution=(100, 100), pillar_type='circle'):
         self.pillar_type = pillar_type
 
-    def geometry(self, D, N, G, type='circle'):
-        geometry_types={'circle':0, 'Rectangle':1, 'Polygon':2}
-        if self.geometry_types.get(self.function_type) == 0:
-            self.feature_library = self.poly
-        elif self.geometry_types.get(self.function_type) == 1:
-            self.feature_library = self.fourier
+    def pillar_mask(self, grid, D, N, G_X, G_R=1):
+        pillar1 = self.pillar(D)
+        pillar2 = affinity.translate(pillar1, xoff=D+G_X, yoff=(D+G_X*G_R)/N)
+        pillar3 = affinity.translate(pillar1, yoff=(D+G_X*G_R))
+        pillar4 = affinity.translate(pillar2, yoff=(D+G_X*G_R))
+
+        pillar1s = affinity.skew(pillar1, ys=-atan(1/N), origin=(0,0), use_radians=True)
+        pillar2s = affinity.skew(pillar2, ys=-atan(1/N), origin=(0,0), use_radians=True)
+        pillar3s = affinity.skew(pillar3, ys=-atan(1/N), origin=(0,0), use_radians=True)
+        pillar4s = affinity.skew(pillar4, ys=-atan(1/N), origin=(0,0), use_radians=True)
+
+        pillar1ss = affinity.scale(pillar1s, xfact=1/(D+G_X), yfact=1/(D+G_X*G_R), zfact=1.0, origin=(0,0))
+        pillar2ss = affinity.scale(pillar2s, xfact=1/(D+G_X), yfact=1/(D+G_X*G_R), zfact=1.0, origin=(0,0))
+        pillar3ss = affinity.scale(pillar3s, xfact=1/(D+G_X), yfact=1/(D+G_X*G_R), zfact=1.0, origin=(0,0))
+        pillar4ss = affinity.scale(pillar4s, xfact=1/(D+G_X), yfact=1/(D+G_X*G_R), zfact=1.0, origin=(0,0))
+
+        grid_points = np.array([grid[0].flatten(), grid[1].flatten()]).T
+        grid_Points = [Point(p) for p in grid_points.tolist()]
+
+        def contains(points):
+            if pillar1ss.contains(points) or \
+                pillar2ss.contains(points) or \
+                pillar3ss.contains(points) or \
+                pillar4ss.contains(points):
+                return True
+            else:
+                return False
+
+        mask = filter(contains, grid_Points)
+        mask_xy = np.array([p.coords[0] for p in mask])
+
+        return mask_xy
+
+    def pillar(self, D, pillar_org=(0,0)):
+        # First makes one pillar
+        geometry_types = {'circle': 0, 'polygon': 1}
+        if geometry_types.get(self.pillar_type) == 0:
+            pillar = Point(pillar_org).buffer(D) 
         else:
-            self.feature_library = self.general
+            pillar = Polygon([d for d in D])
+        
+        return pillar
+
     def parall2square(self, x, y, slope, D, G_X, G_R=1):
         # Domain shear transformation from parallelogram to a rectangular
         x_mapped = x
@@ -57,17 +94,6 @@ class DLD_Util(pillar_type='circle'):
         y_mapped = y_mapped + slope * x_mapped
 
         return x_mapped, y_mapped
-
-    def mask(self, xy, xy_grid):
-        x_mask = []
-        y_mask = []
-
-        # for x in xy_grid[0]:
-        #     for y in xy_grid[1]:
-        #         if x < xy[0]
-
-
-        return (x_mask, y_mask)
 
     def interp2grid(self, x_mapped, y_mapped, data_mapped, x_grid, y_grid, method='linear'):
         # Interpolation of mapped data to x & y grid

@@ -1,7 +1,7 @@
 # import sys
 # sys.path.append('/content/drive/MyDrive/DLDNN/')
 
-from DLD_Util import DLD_Util as utl
+from DLD_Utils import DLD_Util as utl
 import numpy as np
 from Alpha_NN import Autoencoder
 

@@ -1,4 +1,4 @@
-from DLD_Util import DLD_Util
+from DLD_Utils import DLD_Util
 
 
 D = [10, 15, 20, 25, 30, 35, 40, 45, 50]
