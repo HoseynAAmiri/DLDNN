@@ -5,10 +5,10 @@ import matplotlib.pyplot as plt
 import pickle
 from tqdm import tqdm
 from scipy.interpolate import griddata
+from math import atan
 from shapely import affinity
 from shapely.geometry import Point
 from shapely.geometry.polygon import Polygon
-from math import atan
 import particle_trajectory as ptj
 
 '''
@@ -59,14 +59,17 @@ class DLD_Utils:
                 return False
 
         mask = filter(contains, grid_Points)
-        mask_xy = np.array([p.coords[0] for p in mask])
+        xy_mask = np.array([p.coords[0] for p in mask])
 
-        return mask_xy
+        return xy_mask
 
-    def pillar(self, D, pillar_org=(0, 0)):
+    def pillar(self, D, pillar_type=None, pillar_org=(0, 0)):
         # First makes one pillar
+        if not pillar_type:
+            pillar_type = self.pillar_type
+            
         geometry_types = {'circle': 0, 'polygon': 1}
-        if geometry_types.get(self.pillar_type) == 0:
+        if geometry_types.get(pillar_type) == 0:
             pillar = Point(pillar_org).buffer(D)
         else:
             pillar = Polygon([d for d in D])
@@ -74,7 +77,7 @@ class DLD_Utils:
         return pillar
 
     def parall2square(self, x, y, slope, D, G_X, G_R=1):
-        # Domain shear transformation from parallelogram to a rectangular
+        # Domain shear transformation from parallelogram to rectangular
         x_mapped = x
         y_mapped = y - slope * x
 
