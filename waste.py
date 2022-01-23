@@ -7,9 +7,10 @@ from math import atan
 
 
 D = 20
+N = 10
 G_X = 40
 G_R = 1
-N = 10
+
 pillar1 = Point((0, 0)).buffer(10)
 pillar2 = affinity.translate(pillar1, xoff=D+G_X, yoff=(D+G_X*G_R)/N)
 pillar3 = affinity.translate(pillar1, yoff=(D+G_X*G_R))
@@ -33,7 +34,7 @@ pillar3ss = affinity.scale(pillar3s, xfact=1/(D+G_X),
 pillar4ss = affinity.scale(pillar4s, xfact=1/(D+G_X),
                            yfact=1/(D+G_X*G_R), zfact=1.0, origin=(0, 0))
 
-grid_size = (50, 50)
+grid_size = (100, 100)
 x_grid_size = grid_size[0]
 y_grid_size = grid_size[1]
 
