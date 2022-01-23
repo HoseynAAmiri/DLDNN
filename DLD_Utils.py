@@ -1,17 +1,15 @@
 import os
-import mph
-import pickle
-import csv
 import time
 import numpy as np
 import matplotlib.pyplot as plt
+import pickle
+from tqdm import tqdm
 from scipy.interpolate import griddata
 from shapely import affinity
 from shapely.geometry import Point
 from shapely.geometry.polygon import Polygon
-from tqdm import tqdm
 from math import atan
-import particle_tracing as spt
+import particle_trajectory as ptj
 
 '''
 DLD_Util provides a variety of tasks from data generation
@@ -23,6 +21,7 @@ grid size
 class DLD_Utils():
     def __init__(self, resolution=(100, 100), pillar_type='circle'):
         self.pillar_type = pillar_type
+        self.resolution = resolution
 
     def pillar_mask(self, grid, D, N, G_X, G_R=1):
         pillar1 = self.pillar(D)
@@ -143,7 +142,7 @@ class DLD_Utils():
         stream = []
         # counter = np.zeros((no_period,))
         for i in range(no_period):
-            stream.append(spt.streamplot(x_grid, y_grid, u_interp,
+            stream.append(ptj.streamplot(x_grid, y_grid, u_interp,
                                          v_interp, start_point=start_point))
 
             if stream[i][-1, 0] >= 0.99:
@@ -170,72 +169,7 @@ class DLD_Utils():
 
         plt.show()
 
-    def generate_data(self, simulator, D, N, G, Re):
-        '''
-        The setting in which our database is created
-        D is the diameter of pillars
-        G is the gap between pilarrs
-        N is the periodic number of pillars lattice
-        Re is Reynols number
-        '''
-
-        data_size = len(D)*len(N)*len(G)*len(Re)
-
-        # Import COMSOL model
-        client = mph.start()
-        pymodel = client.load(simulator)
-        self.model = pymodel.java
-        self.param = self.model.param()
-        self.study = self.model.study('std1')
-        self.result = self.model.result()
-        cd = os.getcwd()
-
-        folder = cd + "\\Data"
-        os.makedirs(folder)
-        info_D = list(map(str, D))
-        info_N = list(map(str, N))
-        info_G = list(map(str, G))
-        info_Re = list(map(str, Re))
-
-        info_D.insert(0, 'D')
-        info_N.insert(0, 'N')
-        info_G.insert(0, 'G')
-        info_Re.insert(0, 'Re')
-
-        information = [info_D, info_N, info_G, info_Re]
-
-        with open(folder + '\\information.csv', 'w') as f:
-            writer = csv.writer(f)
-            writer.writerows(information)
-
-        pbar = tqdm(total=data_size, position=0, leave=True)
-
-        for d in D:
-            folder = cd + "\\Data\\D{}".format(d)
-            os.makedirs(folder)
-            for n in N:
-                for g in G:
-                    for re in Re:
-                        # Set study's parameters
-                        self.param.set("Do", str(d) + "[um]")
-                        self.param.set("N", str(n))
-                        self.param.set("G", str(g) + "[um]")
-                        self.param.set("Re", str(re))
-
-                        # Run model
-                        self.study.run()
-
-                        # Export data
-                        filename = cd + \
-                            "\\Data\\D{}\\{}_{}_{}_{}.csv".format(
-                                d, d, n, g, re)
-                        self.result.export("data1").set("filename", filename)
-                        self.result.export("data1").run()
-
-                        pbar.update(1)
-                        time.sleep(0.1)
-
-    def compile_data(self, grid_size=(100, 100)):
+    def compile_data(self, grid_size=self.resolution):
 
         x_grid_size = grid_size[0]
         y_grid_size = grid_size[1]

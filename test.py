@@ -6,8 +6,8 @@ from DLD_Utils import DLD_Utils as utl
 
 
 m = utl()
-data = np.genfromtxt("psi_p.csv", delimiter=",")
-bnd = np.genfromtxt("boundary.csv", delimiter=",")
+data = np.genfromtxt("Data4.csv", delimiter=",")
+
 x = data[:, 0]
 y = data[:, 1]
 
