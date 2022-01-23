@@ -1,4 +1,3 @@
-
 from shapely.geometry import Point
 import matplotlib.pyplot as plt
 import numpy as np
