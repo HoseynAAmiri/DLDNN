@@ -13,7 +13,7 @@ import particle_trajectory as ptj
 
 '''
 DLD_Utils provides a necessary tasks from creating pillar
-to handling results from the generation codes
+to handling results coming from the generated data
 '''
 
 
@@ -21,6 +21,19 @@ class DLD_Utils:
     def __init__(self, resolution=(100, 100), pillar_type='circle'):
         self.pillar_type = pillar_type
         self.resolution = resolution
+
+    def pillar(self, D, pillar_type=None, pillar_org=(0, 0)):
+        # First makes one pillar
+        if not pillar_type:
+            pillar_type = self.pillar_type
+
+        geometry_types = {'circle': 0, 'polygon': 1}
+        if geometry_types.get(pillar_type) == 0:
+            pillar = Point(pillar_org).buffer(D/2)
+        else:
+            pillar = Polygon([d for d in D])
+
+        return pillar
 
     def pillar_mask(self, grid, D, N, G_X, G_R=1):
         pillar1 = self.pillar(D)
@@ -65,19 +78,6 @@ class DLD_Utils:
 
         return np.array(xy_mask), idx
 
-    def pillar(self, D, pillar_type=None, pillar_org=(0, 0)):
-        # First makes one pillar
-        if not pillar_type:
-            pillar_type = self.pillar_type
-
-        geometry_types = {'circle': 0, 'polygon': 1}
-        if geometry_types.get(pillar_type) == 0:
-            pillar = Point(pillar_org).buffer(D/2)
-        else:
-            pillar = Polygon([d for d in D])
-
-        return pillar
-
     def add_mask(self, data, mask, mask_with=0):
         empty = np.empty((mask.shape[0], data.shape[1]-mask.shape[1]))
         empty[:] = mask_with
@@ -89,10 +89,11 @@ class DLD_Utils:
         if len(data.shape) >= 2:
             shape = data.shape
             data = data.flatten()
-
-        data[idx] = mask_with
-
-        return data.reshape(shape)
+            data[idx] = mask_with
+            return data.reshape(shape)
+        else:
+            data[idx] = mask_with
+            return data
 
     def parall2square(self, x, y, slope, D, G_X, G_R=1):
         # Domain shear transformation from parallelogram to rectangular
