@@ -26,8 +26,8 @@ x_grid, y_grid = np.meshgrid(xx, yy)
 x_mapped, y_mapped = m.parall2square(data[:, 0], data[:, 1], 1/N, D, G_X)
 u_mapped, v_mapped = m.parall2square(data[:, 2], data[:, 3], 1/N, D, G_X)
 
-u_interp = m.interp2grid(x_mapped, y_mapped, u_mapped, x_grid, y_grid)
-v_interp = m.interp2grid(x_mapped, y_mapped, v_mapped, x_grid, y_grid)
+u_interp = m.interp2grid(x_mapped, y_mapped, u_mapped, x_grid, y_grid, method='nearest')
+v_interp = m.interp2grid(x_mapped, y_mapped, v_mapped, x_grid, y_grid, method='nearest')
 
 print(u_interp)
 
