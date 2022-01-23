@@ -7,11 +7,11 @@ from DLD_Utils import DLD_Utils as utl
 
 def generate_data(simulator, D, N, G, Re):
     '''
-    The setting in which our database is created
+    The settings that creates database
     D is the diameter of pillars
     G is the gap between pilarrs
     N is the periodic number of pillars lattice
-    Re is Reynols number
+    Re is the Reynols number
     '''
 
     data_size = len(D)*len(N)*len(G)*len(Re)
@@ -77,8 +77,7 @@ Re = [0.1, 0.2, 0.4, 0.8, 1, 2, 4, 6, 8, 10, 15, 20, 25, 30]
 
 grid_size = (100, 100)
 
-m = utl()
 generate_data('DLD_COMSOL2.mph', D, N, G, Re)
-dataset = m.compile_data(grid_size = grid_size)
-m.save_data(dataset, 'dataset')
-# dataset = m.load_data('dataset')
+dataset = utl.compile_data(grid_size = grid_size)
+utl.save_data(dataset, 'dataset')
+# dataset = utl.load_data('dataset')

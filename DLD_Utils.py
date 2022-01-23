@@ -168,9 +168,10 @@ class DLD_Utils:
 
         plt.show()
 
-    def compile_data(self, grid_size=(100, 100)):
+    def compile_data(self, grid_size=None):
 
-        grid_size = self.resolution
+        if not grid_size:
+            grid_size = self.resolution
 
         x_grid_size = grid_size[0]
         y_grid_size = grid_size[1]
