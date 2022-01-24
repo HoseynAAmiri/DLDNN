@@ -1,14 +1,15 @@
 import os
 import time
+import pickle
 import numpy as np
 import matplotlib.pyplot as plt
-import pickle
 from tqdm import tqdm
 from scipy.interpolate import griddata
 from math import atan
 from shapely import affinity
 from shapely.geometry import Point
 from shapely.geometry.polygon import Polygon
+from descartes import PolygonPatch
 import particle_trajectory as ptj
 
 '''
@@ -83,7 +84,7 @@ class DLD_Utils:
     def pillar_mask(self, grid, pillar, D, N, G_X, G_R=1):
 
         pillars = self.pillars(pillar, D, N, G_X, G_R=G_R)
-        
+
         grid_points = np.array([grid[0].flatten(), grid[1].flatten()]).T
         grid_Points = [Point(p) for p in grid_points.tolist()]
 
@@ -210,7 +211,7 @@ class DLD_Utils:
 
         plt.show()
 
-    def psi2uv(self, psi, dx, dy, plot=False, figsize=(8, 6)):
+    def psi2uv(self, psi, dx, dy, plot=False, figsize=(8, 4)):
 
         u = np.gradient(psi, dy, axis=0)
         v = -np.gradient(psi, dx, axis=1)
@@ -247,7 +248,7 @@ class DLD_Utils:
 
         return u, v
 
-    def simulate_particle(self, u_interp, v_interp, start_point, no_period=1):
+    def simulate_particle(self, u_interp, v_interp, pillars, start_point, periods=1, plot=False, figsize=(9, 4)):
 
         shape = u_interp.shape
         xx = np.linspace(0, 1, shape[0])
@@ -255,7 +256,7 @@ class DLD_Utils:
         x_grid, y_grid = np.meshgrid(xx, yy)
 
         stream = []
-        for i in range(no_period):
+        for i in range(periods):
             stream.append(ptj.streamplot(x_grid, y_grid, u_interp,
                                          v_interp, start_point=start_point))
 
@@ -264,30 +265,31 @@ class DLD_Utils:
             elif stream[i][-1, 1] <= 0.01:
                 start_point = stream[i][-1, :] + [0, 1]
 
+        if plot:
+
+            fig = plt.figure(figsize=figsize)
+            fig.add_subplot(1, 2, 1)
+            periods = len(stream)
+            step_data = np.zeros((periods, 2))
+            for i in range(periods):
+                plt.plot(stream[i][:, 0], stream[i][:, 1], color=(
+                    0.1, 0.2, 0.5, (i/periods+0.1)/1.1))
+
+                step_data[i] = [stream[i][0, 1], stream[i][-1, 1]]
+
+            plt.xlim([0, 1])
+            plt.ylim([0, 1])
+
+            ax = plt.gca()
+            for pillar in pillars:
+                ax.add_patch(PolygonPatch(pillar, fc='red'))
+
+            fig.add_subplot(1, 2, 2)
+            plt.plot(step_data[:, 0], step_data[:, 1])
+
+            plt.show()
+
         return stream
-
-    def periodic_plot(self, stream, pillars, figsize=(8, 4)):
-
-        fig = plt.figure(figsize=figsize)
-        fig.add_subplot(1, 2, 1)
-        no_period = len(stream)
-        step_data = np.zeros((no_period, 2))
-        for i in range(no_period):
-            plt.plot(stream[i][:, 0], stream[i][:, 1], color=(
-                0.1, 0.2, 0.5, (i/no_period+0.1)/1.1))
-
-            step_data[i] = [stream[i][0, 1], stream[i][-1, 1]]
-
-        plt.xlim([0, 1])
-        plt.ylim([0, 1])
-
-        for pillar in pillars:
-            plt.plot(*pillar.exterior.xy, 'r')
-
-        fig.add_subplot(1, 2, 2)
-        plt.plot(step_data[:, 0], step_data[:, 1])
-
-        plt.show()
 
     def compile_data(self, grid_size=None):
 
