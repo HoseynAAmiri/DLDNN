@@ -11,8 +11,8 @@ G_R = 1
 grid_size = (100, 100)
 utl = utl(resolution=grid_size)
 x_grid, y_grid, dx, dy = utl.grid_data
-
-xy_mask, mask_idx = utl.pillar_mask((x_grid, y_grid), D, N, G_X)
+pillar = utl.pillar(D)
+xy_mask, mask_idx = utl.pillar_mask((x_grid, y_grid), pillar, D, N, G_X)
 
 # data = utl.add_mask(data, xy_mask, D, N, G_X, mask_with=np.NaN)
 
@@ -38,9 +38,9 @@ if compare:
 u, v = utl.psi2uv(psi_interp, dx, dy, plot=False)
 
 x0 = 0
-y0 = 0.5
+y0 = 16/60
 point0 = np.array([x0, y0])
-no_period = 50
+no_period = 20
 stream = utl.simulate_particle(u, v, start_point=point0, no_period=no_period)
 
 # stream_original = stream
@@ -48,4 +48,5 @@ stream = utl.simulate_particle(u, v, start_point=point0, no_period=no_period)
 #     stream_original[i][:, 0], stream_original[i][:, 1] = utl.square2parall(
 #         stream[i][:, 0], stream[i][:, 1], 1/N, D, G_X)
 
-utl.periodic_plot(stream)
+pillars = utl.pillars(pillar, D, N, G_X)
+utl.periodic_plot(stream, pillars)

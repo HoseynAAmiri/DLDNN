@@ -54,9 +54,8 @@ class DLD_Utils:
 
         return pillar
 
-    def pillar_mask(self, grid, D, N, G_X, G_R=1):
+    def pillars(self, pillar1, D, N, G_X, G_R=1):
 
-        pillar1 = self.pillar(D)
         pillar2 = affinity.translate(pillar1, xoff=D+G_X, yoff=(D+G_X*G_R)/N)
         pillar3 = affinity.translate(pillar1, yoff=(D+G_X*G_R))
         pillar4 = affinity.translate(pillar2, yoff=(D+G_X*G_R))
@@ -79,17 +78,21 @@ class DLD_Utils:
         pillar4ss = affinity.scale(
             pillar4s, xfact=1/(D+G_X), yfact=1/(D+G_X*G_R), zfact=1.0, origin=(0, 0))
 
+        return [pillar1ss, pillar2ss, pillar3ss, pillar4ss]
+
+    def pillar_mask(self, grid, pillar, D, N, G_X, G_R=1):
+
+        pillars = self.pillars(pillar, D, N, G_X, G_R=G_R)
+
         grid_points = np.array([grid[0].flatten(), grid[1].flatten()]).T
         grid_Points = [Point(p) for p in grid_points.tolist()]
 
-        def contains(points):
-            if pillar1ss.contains(points) or \
-                    pillar2ss.contains(points) or \
-                    pillar3ss.contains(points) or \
-                    pillar4ss.contains(points):
-                return True
-            else:
-                return False
+        def contains(point):
+            for pillar in pillars:
+                if pillar.contains(point):
+                    return True
+                else:
+                    return False
 
         mask = filter(contains, grid_Points)
         idx = list(filter(lambda i: contains(
@@ -159,7 +162,7 @@ class DLD_Utils:
 
         return data_interp
 
-    def compare_plots(self, data1, data2, figsize=(7, 6)):
+    def compare_plots(self, data1, data2, figsize=(8, 6)):
 
         x, y, u, v = data1[0], data1[1], data1[2], data1[3]
         x_new, y_new, u_new, v_new = data2[0], data2[1], data2[2], data2[3]
@@ -188,7 +191,7 @@ class DLD_Utils:
 
         plt.show()
 
-    def psi2uv(self, psi, dx, dy, plot=False, figsize=(8,6)):
+    def psi2uv(self, psi, dx, dy, plot=False, figsize=(8, 6)):
 
         u = np.gradient(psi, dy, axis=0)
         v = -np.gradient(psi, dx, axis=1)
@@ -202,7 +205,7 @@ class DLD_Utils:
         sub_v_f_h = np.flip(v, axis=1)[:, -3:]
         sub_v_v = v[-3:, :]
         sub_v_f_v = np.flip(v, axis=0)[-3:, :]
-        
+
         sub_u_h[np.isnan(sub_u_h)] = sub_u_f_h[np.isnan(sub_u_h)]
         sub_u_v[np.isnan(sub_u_v)] = sub_u_f_v[np.isnan(sub_u_v)]
         sub_v_h[np.isnan(sub_v_h)] = sub_v_f_h[np.isnan(sub_v_h)]
@@ -218,10 +221,11 @@ class DLD_Utils:
 
         if plot:
             fig, axes = plt.subplots(1, 2, figsize=figsize)
-            
+
             fig.subplots_adjust(left=0.1, wspace=0.5)
 
-            im = axes[0].imshow(np.flip(u, axis=0), extent=[0, 1, 0, 1], cmap='rainbow')
+            im = axes[0].imshow(np.flip(u, axis=0), extent=[
+                                0, 1, 0, 1], cmap='rainbow')
             axes[0].set_title("u [m/s]")
             axes[0].set(xlabel="$x*$", ylabel="$y*$")
 
@@ -232,8 +236,8 @@ class DLD_Utils:
             cbar_ax = fig.add_axes([xc+wc+0.02, yc, 0.02, hc])
             fig.colorbar(im, cax=cbar_ax)
 
-
-            im = axes[1].imshow(np.flip(v, axis=0), extent=[0, 1, 0, 1], cmap='rainbow')
+            im = axes[1].imshow(np.flip(v, axis=0), extent=[
+                                0, 1, 0, 1], cmap='rainbow')
             axes[1].set_title("v [m/s]")
             axes[1].set(xlabel="$x*$", ylabel="$y*$")
 
@@ -263,7 +267,7 @@ class DLD_Utils:
 
         return stream
 
-    def periodic_plot(self, stream, figsize=(6, 4)):
+    def periodic_plot(self, stream, pillars, figsize=(8, 4)):
 
         fig = plt.figure(figsize=figsize)
         fig.add_subplot(1, 2, 1)
@@ -277,6 +281,9 @@ class DLD_Utils:
 
         plt.xlim([0, 1])
         plt.ylim([0, 1])
+
+        for pillar in pillars:
+            plt.plot(*pillar.exterior.xy, 'r')
 
         fig.add_subplot(1, 2, 2)
         plt.plot(step_data[:, 0], step_data[:, 1])
