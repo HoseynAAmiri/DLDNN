@@ -40,4 +40,5 @@ y0 = 16/60
 point0 = np.array([x0, y0])
 periods = 20
 pillars = utl.pillars(pillar, D, N, G_X)
-stream = utl.simulate_particle(u, v, pillars, start_point=point0, periods=periods, plot=True)
+stream = utl.simulate_particle(
+    u, v, pillars, start_point=point0, periods=periods, plot=True)
