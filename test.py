@@ -20,8 +20,10 @@ x_mapped, y_mapped = utl.parall2square(data[:, 0], data[:, 1], 1/N, D, G_X)
 psi, p = data[:, 2], data[:, 3]
 data1 = tuple([x_mapped, y_mapped, psi, p])
 
-psi_interp = utl.interp2grid(x_mapped, y_mapped, psi, x_grid, y_grid, method='linear')
-p_interp = utl.interp2grid(x_mapped, y_mapped, p, x_grid, y_grid, method='linear')
+psi_interp = utl.interp2grid(
+    x_mapped, y_mapped, psi, x_grid, y_grid, method='linear')
+p_interp = utl.interp2grid(x_mapped, y_mapped, p,
+                           x_grid, y_grid, method='linear')
 
 psi_interp = utl.insert_mask(psi_interp, mask_idx, mask_with=np.NaN)
 p_interp = utl.insert_mask(p_interp, mask_idx, mask_with=np.NaN)
@@ -35,13 +37,12 @@ if compare:
 
 u, v = utl.psi2uv(psi_interp, dx, dy, plot=True)
 
-'''
+
 x0 = 0
 y0 = 0.5
 point0 = np.array([x0, y0])
 no_period = 1
-stream = utl.simulate_particle(
-    psi_interp, p_interp, start_point=point0, no_period=no_period)
+stream = utl.simulate_particle(u, v, start_point=point0, no_period=no_period)
 
 # stream_original = stream
 # for i in range(no_period):
@@ -49,4 +50,3 @@ stream = utl.simulate_particle(
 #         stream[i][:, 0], stream[i][:, 1], 1/N, D, G_X)
 
 utl.periodic_plot(stream)
-'''
