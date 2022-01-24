@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from DLD_Utils import DLD_Utils as utl
 
-utl = utl()
+
 data = np.genfromtxt("psi_p.csv", delimiter=",")
 N = 10
 D = 20
@@ -17,6 +17,7 @@ xx = np.linspace(0, 1, x_grid_size)
 yy = np.linspace(0, 1, y_grid_size)
 x_grid, y_grid = np.meshgrid(xx, yy)
 
+utl = utl(resolution=grid_size)
 x_mapped, y_mapped = utl.parall2square(data[:, 0], data[:, 1], 1/N, D, G_X)
 psi_mapped, p_mapped = utl.parall2square(data[:, 2], data[:, 3], 1/N, D, G_X)
 
@@ -38,10 +39,10 @@ p_interp = utl.insert_mask(p_interp, idx, mask_with=0)
 data2 = tuple([x_grid.flatten(), y_grid.flatten(),
                psi_interp.flatten(), p_interp.flatten()])
 
-compare = False
+compare = True
 if compare:
     utl.compare_plots(data1, data2)
-
+'''
 x0 = 0
 y0 = 0.5
 point0 = np.array([x0, y0])
@@ -56,3 +57,4 @@ stream = utl.simulate_particle(
 
 utl.periodic_plot(stream)
 
+'''

@@ -19,6 +19,7 @@ to handling results coming from the generated data
 
 class DLD_Utils:
     def __init__(self, resolution=(100, 100), pillar_type='circle'):
+
         self.pillar_type = pillar_type
         self.resolution = resolution
 
@@ -36,6 +37,7 @@ class DLD_Utils:
         return pillar
 
     def pillar_mask(self, grid, D, N, G_X, G_R=1):
+
         pillar1 = self.pillar(D)
         pillar2 = affinity.translate(pillar1, xoff=D+G_X, yoff=(D+G_X*G_R)/N)
         pillar3 = affinity.translate(pillar1, yoff=(D+G_X*G_R))
@@ -79,6 +81,7 @@ class DLD_Utils:
         return np.array(xy_mask), idx
 
     def add_mask(self, data, mask, mask_with=0):
+
         empty = np.empty((mask.shape[0], data.shape[1]-mask.shape[1]))
         empty[:] = mask_with
         mask_data = np.concatenate((mask, empty), axis=1)
@@ -86,6 +89,7 @@ class DLD_Utils:
         return np.concatenate((data, mask_data))
     
     def insert_mask(self, data, idx, mask_with=0):
+
         if len(data.shape) >= 2:
             shape = data.shape
             data = data.flatten()
@@ -110,6 +114,7 @@ class DLD_Utils:
         return x_mapped, y_mapped
 
     def square2parall(self, x, y, slope, D, G_X, G_R=1):
+
         X_MAX = D + G_X
         Y_MAX = D + G_X * G_R
 
@@ -161,7 +166,6 @@ class DLD_Utils:
         x_grid, y_grid = np.meshgrid(xx, yy)
 
         stream = []
-        # counter = np.zeros((no_period,))
         for i in range(no_period):
             stream.append(ptj.streamplot(x_grid, y_grid, u_interp,
                                          v_interp, start_point=start_point))
@@ -207,11 +211,10 @@ class DLD_Utils:
         folders = [name for name in os.listdir(
             directory) if os.path.isdir(os.path.join(directory, name))]
 
-        pbar1 = tqdm(total=len(folders), position=0, leave=True)
-
         dataset_u = []
         dataset_v = []
         labels = []
+        pbar1 = tqdm(total=len(folders), position=0, leave=True)
         for folder in folders:
             folder_dir = directory + "\\" + folder
             filesname = [os.path.splitext(filename)[0]
@@ -221,16 +224,15 @@ class DLD_Utils:
             time.sleep(0.1)
 
             pbar2 = tqdm(total=len(filesname), position=0, leave=True)
-
             for name in filesname:
                 data = np.genfromtxt(
                     folder_dir + "\\" + name + ".csv", delimiter=",")
                 data = np.nan_to_num(data)
 
-                name = list(map(float, name.split('_')))
-                d, n, g, re = name[0], name[1], name[2], name[3]
+                label = list(map(float, name.split('_')))
+                d, n, g, re = label[0], label[1], label[2], label[3]
 
-                labels.append(name)
+                labels.append(label)
 
                 x_mapped, y_mapped = self.parall2square(
                     data[:, 0], data[:, 1], 1/n, d, g)
@@ -249,8 +251,7 @@ class DLD_Utils:
                 pbar2.update(1)
                 time.sleep(0.1)
 
-        xyuv = (np.array(dataset_u), np.array(dataset_v), np.array(labels))
-        return xyuv
+        return (np.array(dataset_u), np.array(dataset_v), np.array(labels))
 
     def save_data(self, data, name='data'):
         with open(name+".pickle", "wb") as f:

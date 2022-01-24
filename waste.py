@@ -9,13 +9,19 @@ idx = np.array(([0, 1, 5, 3, 4],[0, 1, 5, 3, 4]))
 print(len(idx.shape))
 
 
-# D = 20
+D = 20
 # N = 10
 # G_X = 40
 # G_R = 1
 
 
-# pillar1 = Point((0, 0)).buffer(D/2)
+pillar1 = Point((0, 0)).buffer(D/2)
+x,y = pillar1.exterior.xy
+plt.plot(x,y, 'k')
+x,y = pillar1.buffer(10).exterior.xy
+plt.plot(x,y, 'r')
+plt.show()
+
 # pillar2 = affinity.translate(pillar1, xoff=D+G_X, yoff=(D+G_X*G_R)/N)
 # pillar3 = affinity.translate(pillar1, yoff=(D+G_X*G_R))
 # pillar4 = affinity.translate(pillar2, yoff=(D+G_X*G_R))

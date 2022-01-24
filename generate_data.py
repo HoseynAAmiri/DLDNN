@@ -5,14 +5,16 @@ import time
 from tqdm import tqdm
 from DLD_Utils import DLD_Utils as utl
 
+'''
+The settings that creates database
+D is the diameter of pillars
+G is the gap between pilarrs
+N is the periodic number of pillars lattice
+Re is the Reynols number
+'''
+
+
 def generate_data(simulator, D, N, G, Re):
-    '''
-    The settings that creates database
-    D is the diameter of pillars
-    G is the gap between pilarrs
-    N is the periodic number of pillars lattice
-    Re is the Reynols number
-    '''
 
     data_size = len(D)*len(N)*len(G)*len(Re)
 
@@ -44,7 +46,6 @@ def generate_data(simulator, D, N, G, Re):
         writer.writerows(information)
 
     pbar = tqdm(total=data_size, position=0, leave=True)
-
     for d in D:
         folder = cd + "\\Data\\D{}".format(d)
         os.makedirs(folder)
@@ -77,7 +78,7 @@ Re = [0.1, 0.2, 0.4, 0.8, 1, 2, 4, 6, 8, 10, 15, 20, 25, 30]
 
 grid_size = (100, 100)
 
-generate_data('DLD_COMSOL2.mph', D, N, G, Re)
+generate_data('DLD_COMSOL.mph', D, N, G, Re)
 dataset = utl.compile_data(grid_size = grid_size)
 utl.save_data(dataset, 'dataset')
-# dataset = utl.load_data('dataset')
+
