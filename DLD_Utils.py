@@ -22,6 +22,24 @@ class DLD_Utils:
 
         self.pillar_type = pillar_type
         self.resolution = resolution
+        self.grid_data = self.grid()
+
+    def grid(self, grid_size=None):
+
+        if not grid_size:
+            grid_size = self.resolution
+
+        x_grid_size = grid_size[0]
+        y_grid_size = grid_size[1]
+
+        xx = np.linspace(0, 1, x_grid_size)
+        yy = np.linspace(0, 1, y_grid_size)
+        x_grid, y_grid = np.meshgrid(xx, yy)
+
+        dx = xx[1] - xx[0]
+        dy = yy[1] - yy[0]
+
+        return x_grid, y_grid, dx, dy
 
     def pillar(self, D, pillar_type=None, pillar_org=(0, 0)):
         # First makes one pillar
@@ -80,14 +98,19 @@ class DLD_Utils:
 
         return np.array(xy_mask), idx
 
-    def add_mask(self, data, mask, mask_with=0):
+    def add_mask(self, data, xy_mask, D, N, G_X, G_R=1, mask_with=0):
 
-        empty = np.empty((mask.shape[0], data.shape[1]-mask.shape[1]))
+        x, y = self.square2parall(
+            xy_mask[:, 0], xy_mask[:, 1], 1/N, D, G_X, G_R=G_R)
+        xy_mask = np.concatenate(([x], [y])).T
+
+        empty = np.empty((xy_mask.shape[0], data.shape[1]-xy_mask.shape[1]))
         empty[:] = mask_with
-        mask_data = np.concatenate((mask, empty), axis=1)
+
+        mask_data = np.concatenate((xy_mask, empty), axis=1)
 
         return np.concatenate((data, mask_data))
-    
+
     def insert_mask(self, data, idx, mask_with=0):
 
         if len(data.shape) >= 2:
@@ -136,27 +159,90 @@ class DLD_Utils:
 
         return data_interp
 
-    def compare_plots(self, data1, data2, figsize=(6, 6)):
+    def compare_plots(self, data1, data2, figsize=(7, 6)):
 
         x, y, u, v = data1[0], data1[1], data1[2], data1[3]
         x_new, y_new, u_new, v_new = data2[0], data2[1], data2[2], data2[3]
 
         fig = plt.figure(figsize=figsize)
         ax1 = fig.add_subplot(2, 2, 1)
-        ax1.set_title("u (before)")
+        ax1.set_xlabel('$x$')
+        ax1.set_ylabel('$y$')
+        ax1.set_title("$\psi$ (before)")
         plt.scatter(x, y, s=0.1, c=u)
+        plt.colorbar()
+
         ax2 = fig.add_subplot(2, 2, 2)
-        ax2.set_title("v (before)")
+        ax2.set_title("p (before)")
         plt.scatter(x, y, s=0.1, c=v)
+        plt.colorbar()
 
         ax3 = fig.add_subplot(2, 2, 3)
-        ax3.set_title("u (after)")
+        ax3.set_title("$\psi$ (after)")
         plt.scatter(x_new, y_new, s=0.1, c=u_new)
+        plt.colorbar()
         ax4 = fig.add_subplot(2, 2, 4)
-        ax4.set_title("v (after)")
+        ax4.set_title("p (after)")
         plt.scatter(x_new, y_new, s=0.1, c=v_new)
+        plt.colorbar()
 
         plt.show()
+
+    def psi2uv(self, psi, dx, dy, plot=False, figsize=(8,6)):
+
+        v = np.gradient(psi, dy, axis=1)
+        u = np.gradient(psi, dx, axis=0)
+
+        sub_u_h = u[:, -3:]
+        sub_u_f_h = np.flip(u, axis=1)[:, -3:]
+        sub_u_v = u[-3:, :]
+        sub_u_f_v = np.flip(u, axis=0)[-3:, :]
+
+        sub_v_h = v[:, -3:]
+        sub_v_f_h = np.flip(v, axis=1)[:, -3:]
+        sub_v_v = v[-3:, :]
+        sub_v_f_v = np.flip(v, axis=0)[-3:, :]
+        
+        sub_u_h[np.isnan(sub_u_h)] = sub_u_f_h[np.isnan(sub_u_h)]
+        sub_u_v[np.isnan(sub_u_v)] = sub_u_f_v[np.isnan(sub_u_v)]
+        sub_v_h[np.isnan(sub_v_h)] = sub_v_f_h[np.isnan(sub_v_h)]
+        sub_v_v[np.isnan(sub_v_v)] = sub_v_f_v[np.isnan(sub_v_v)]
+
+        u[:, -3:] = sub_u_h
+        u[-3:, :] = sub_u_v
+        v[:, -3:] = sub_v_h
+        v[-3:, :] = sub_v_v
+
+        u[np.isnan(u)] = 0
+        v[np.isnan(v)] = 0
+
+        if plot:
+            fig, axes = plt.subplots(1, 2, figsize=figsize)
+            
+            fig.subplots_adjust(left=0.1, wspace=0.5)
+
+            im = axes[0].imshow(u, extent=[0, 1, 0, 1], cmap='rainbow')
+            axes[0].set_title("u [m/s]")
+            axes[0].set(xlabel="$x*$", ylabel="$y*$")
+
+            xc = axes.flat[0].get_position().x0
+            wc = axes.flat[0].get_position().width
+            yc = axes.flat[0].get_position().y0
+            hc = axes.flat[0].get_position().height
+            cbar_ax = fig.add_axes([xc+wc+0.02, yc, 0.02, hc])
+            fig.colorbar(im, cax=cbar_ax)
+
+
+            im = axes[1].imshow(v, extent=[0, 1, 0, 1], cmap='rainbow')
+            axes[1].set_title("v [m/s]")
+            axes[1].set(xlabel="$x*$", ylabel="$y*$")
+
+            cbar_ax = fig.add_axes([0.92, yc, 0.02, hc])
+            fig.colorbar(im, cax=cbar_ax)
+
+            plt.show()
+
+        return u, v
 
     def simulate_particle(self, u_interp, v_interp, start_point, no_period=1):
 
