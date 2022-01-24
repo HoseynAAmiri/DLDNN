@@ -167,7 +167,7 @@ class OutOfBounds(IndexError):
 
 def _integrate_rk12(x0, y0, dmap, f):
     maxerror = 0.003
-    maxds = 0.002
+    maxds = 0.001
 
     ds = maxds
     stotal = 0

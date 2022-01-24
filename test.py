@@ -35,13 +35,12 @@ compare = False
 if compare:
     utl.compare_plots(data1, data2)
 
-u, v = utl.psi2uv(psi_interp, dx, dy, plot=True)
-
+u, v = utl.psi2uv(psi_interp, dx, dy, plot=False)
 
 x0 = 0
 y0 = 0.5
 point0 = np.array([x0, y0])
-no_period = 1
+no_period = 50
 stream = utl.simulate_particle(u, v, start_point=point0, no_period=no_period)
 
 # stream_original = stream

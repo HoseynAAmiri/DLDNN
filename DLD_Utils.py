@@ -190,8 +190,8 @@ class DLD_Utils:
 
     def psi2uv(self, psi, dx, dy, plot=False, figsize=(8,6)):
 
-        v = np.gradient(psi, dy, axis=1)
-        u = np.gradient(psi, dx, axis=0)
+        u = np.gradient(psi, dy, axis=0)
+        v = -np.gradient(psi, dx, axis=1)
 
         sub_u_h = u[:, -3:]
         sub_u_f_h = np.flip(u, axis=1)[:, -3:]
@@ -221,7 +221,7 @@ class DLD_Utils:
             
             fig.subplots_adjust(left=0.1, wspace=0.5)
 
-            im = axes[0].imshow(u, extent=[0, 1, 0, 1], cmap='rainbow')
+            im = axes[0].imshow(np.flip(u, axis=0), extent=[0, 1, 0, 1], cmap='rainbow')
             axes[0].set_title("u [m/s]")
             axes[0].set(xlabel="$x*$", ylabel="$y*$")
 
@@ -233,7 +233,7 @@ class DLD_Utils:
             fig.colorbar(im, cax=cbar_ax)
 
 
-            im = axes[1].imshow(v, extent=[0, 1, 0, 1], cmap='rainbow')
+            im = axes[1].imshow(np.flip(v, axis=0), extent=[0, 1, 0, 1], cmap='rainbow')
             axes[1].set_title("v [m/s]")
             axes[1].set(xlabel="$x*$", ylabel="$y*$")
 
@@ -263,7 +263,7 @@ class DLD_Utils:
 
         return stream
 
-    def periodic_plot(self, stream, figsize=(6, 6)):
+    def periodic_plot(self, stream, figsize=(6, 4)):
 
         fig = plt.figure(figsize=figsize)
         fig.add_subplot(1, 2, 1)
@@ -274,6 +274,9 @@ class DLD_Utils:
                 0.1, 0.2, 0.5, (i/no_period+0.1)/1.1))
 
             step_data[i] = [stream[i][0, 1], stream[i][-1, 1]]
+
+        plt.xlim([0, 1])
+        plt.ylim([0, 1])
 
         fig.add_subplot(1, 2, 2)
         plt.plot(step_data[:, 0], step_data[:, 1])
