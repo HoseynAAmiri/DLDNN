@@ -83,16 +83,18 @@ class DLD_Utils:
     def pillar_mask(self, grid, pillar, D, N, G_X, G_R=1):
 
         pillars = self.pillars(pillar, D, N, G_X, G_R=G_R)
-
+        
         grid_points = np.array([grid[0].flatten(), grid[1].flatten()]).T
         grid_Points = [Point(p) for p in grid_points.tolist()]
 
         def contains(point):
+
+            inside = False
             for pillar in pillars:
                 if pillar.contains(point):
-                    return True
-                else:
-                    return False
+                    inside = True
+
+            return inside
 
         mask = filter(contains, grid_Points)
         idx = list(filter(lambda i: contains(
@@ -162,6 +164,23 @@ class DLD_Utils:
 
         return data_interp
 
+    def recover(self, u, recover_with=0):
+
+        sub_u_h = u[:, -3:]
+        sub_u_f_h = np.flip(u, axis=1)[:, -3:]
+        sub_u_v = u[-3:, :]
+        sub_u_f_v = np.flip(u, axis=0)[-3:, :]
+
+        sub_u_h[np.isnan(sub_u_h)] = sub_u_f_h[np.isnan(sub_u_h)]
+        sub_u_v[np.isnan(sub_u_v)] = sub_u_f_v[np.isnan(sub_u_v)]
+
+        u[:, -3:] = sub_u_h
+        u[-3:, :] = sub_u_v
+
+        u[np.isnan(u)] = recover_with
+
+        return u
+
     def compare_plots(self, data1, data2, figsize=(8, 6)):
 
         x, y, u, v = data1[0], data1[1], data1[2], data1[3]
@@ -196,28 +215,8 @@ class DLD_Utils:
         u = np.gradient(psi, dy, axis=0)
         v = -np.gradient(psi, dx, axis=1)
 
-        sub_u_h = u[:, -3:]
-        sub_u_f_h = np.flip(u, axis=1)[:, -3:]
-        sub_u_v = u[-3:, :]
-        sub_u_f_v = np.flip(u, axis=0)[-3:, :]
-
-        sub_v_h = v[:, -3:]
-        sub_v_f_h = np.flip(v, axis=1)[:, -3:]
-        sub_v_v = v[-3:, :]
-        sub_v_f_v = np.flip(v, axis=0)[-3:, :]
-
-        sub_u_h[np.isnan(sub_u_h)] = sub_u_f_h[np.isnan(sub_u_h)]
-        sub_u_v[np.isnan(sub_u_v)] = sub_u_f_v[np.isnan(sub_u_v)]
-        sub_v_h[np.isnan(sub_v_h)] = sub_v_f_h[np.isnan(sub_v_h)]
-        sub_v_v[np.isnan(sub_v_v)] = sub_v_f_v[np.isnan(sub_v_v)]
-
-        u[:, -3:] = sub_u_h
-        u[-3:, :] = sub_u_v
-        v[:, -3:] = sub_v_h
-        v[-3:, :] = sub_v_v
-
-        u[np.isnan(u)] = 0
-        v[np.isnan(v)] = 0
+        u = self.recover(u)
+        v = self.recover(v)
 
         if plot:
             fig, axes = plt.subplots(1, 2, figsize=figsize)
