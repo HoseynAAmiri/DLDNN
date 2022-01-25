@@ -19,9 +19,9 @@ psi, p = data[:, 2], data[:, 3]
 data1 = tuple([x_mapped, y_mapped, psi, p])
 
 psi_interp = utl.interp2grid(
-    x_mapped, y_mapped, psi, x_grid, y_grid, method='linear')
-p_interp = utl.interp2grid(x_mapped, y_mapped, p,
-                           x_grid, y_grid, method='linear')
+    x_mapped, y_mapped, psi, x_grid, y_grid, method='linear', recover=False)
+p_interp = utl.interp2grid(
+    x_mapped, y_mapped, p, x_grid, y_grid, method='linear', recover=False)
 
 psi_interp = utl.insert_mask(psi_interp, mask_idx, mask_with=np.NaN)
 p_interp = utl.insert_mask(p_interp, mask_idx, mask_with=np.NaN)
@@ -29,11 +29,11 @@ p_interp = utl.insert_mask(p_interp, mask_idx, mask_with=np.NaN)
 data2 = tuple([x_grid.flatten(), y_grid.flatten(),
                psi_interp.flatten(), p_interp.flatten()])
 
-compare = False
+compare = True
 if compare:
     utl.compare_plots(data1, data2)
 
-u, v = utl.psi2uv(psi_interp, dx, dy, plot=False)
+u, v = utl.psi2uv(psi_interp, dx, dy, recover=True, plot=True)
 
 x0 = 0
 y0 = 16/60

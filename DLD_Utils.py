@@ -157,15 +157,18 @@ class DLD_Utils:
 
         return x_mapped, y_mapped
 
-    def interp2grid(self, x_mapped, y_mapped, data_mapped, x_grid, y_grid, method='linear'):
+    def interp2grid(self, x_mapped, y_mapped, data, x_grid, y_grid, method='linear', recover=False):
         # Interpolation of mapped data to x & y grid
         mapped = np.array([x_mapped, y_mapped]).T
-        data_interp = griddata(mapped, data_mapped,
-                               (x_grid, y_grid), method=method)
+        data_interp = griddata(mapped, data, (x_grid, y_grid), method=method)
+
+        if recover:
+            nearest = griddata(mapped, data, (x_grid, y_grid), method='nearest')
+            data_interp[np.isnan(data_interp)] = nearest[np.isnan(data_interp)]
 
         return data_interp
-
-    def recover(self, u, recover_with=0):
+    
+    def recover_uv(self, u, recover_with=0):
 
         sub_u_h = u[:, -3:]
         sub_u_f_h = np.flip(u, axis=1)[:, -3:]
@@ -211,13 +214,14 @@ class DLD_Utils:
 
         plt.show()
 
-    def psi2uv(self, psi, dx, dy, plot=False, figsize=(8, 4)):
+    def psi2uv(self, psi, dx, dy, recover=True, plot=False, figsize=(8, 4)):
 
         u = np.gradient(psi, dy, axis=0)
         v = -np.gradient(psi, dx, axis=1)
 
-        u = self.recover(u)
-        v = self.recover(v)
+        if recover:
+            u = self.recover_uv(u)
+            v = self.recover_uv(v)
 
         if plot:
             fig, axes = plt.subplots(1, 2, figsize=figsize)
