@@ -270,7 +270,6 @@ class DLD_Utils:
                 start_point = stream[i][-1, :] + [0, 1]
 
         if plot:
-
             fig = plt.figure(figsize=figsize)
             fig.add_subplot(1, 2, 1)
             periods = len(stream)
