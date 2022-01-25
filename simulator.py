@@ -33,13 +33,16 @@ compare = False
 if compare:
     utl.compare_plots(data1, data2)
 
-u, v = utl.psi2uv(psi_interp, dx, dy, recover=True, plot=True)
+u, v = utl.psi2uv(psi_interp, dx*(D+G_X)*1e-6, dy*(D+G_X)*1e-6, recover=True, plot=True)
+
+print(np.amax(v), np.amin(v))
+print(np.amax(u), np.amin(u))
 
 x0 = 0
-y0 = 16/60
+y0 = 16.2/(D+G_X)
 point0 = np.array([x0, y0])
-periods = 20
+periods = 1
 pillars = utl.pillars(pillar, D, N, G_X)
-d_particle = 5/(D+G_X)
+d_particle = 0.01/(D+G_X)
 stream = utl.simulate_particle(
     d_particle, u, v, pillars, start_point=point0, periods=periods, plot=True)
