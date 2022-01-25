@@ -34,7 +34,7 @@ compare = False
 if compare:
     utl.compare_plots(data1, data2)
 
-u, v = utl.psi2uv(psi_interp, dx*(D+G_X)*1e-6, dy*(D+G_X)*1e-6, recover=True, plot=True)
+u, v = utl.psi2uv(psi_interp, dx*(D+G_X)*1e-6, dy*(D+G_X*G_R)*1e-6, recover=True, plot=True)
 
 print(np.amax(v), np.amin(v))
 print(np.amax(u), np.amin(u))
