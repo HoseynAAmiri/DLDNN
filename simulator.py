@@ -29,7 +29,7 @@ p_interp = utl.insert_mask(p_interp, mask_idx, mask_with=np.NaN)
 data2 = tuple([x_grid.flatten(), y_grid.flatten(),
                psi_interp.flatten(), p_interp.flatten()])
 
-compare = True
+compare = False
 if compare:
     utl.compare_plots(data1, data2)
 
@@ -40,5 +40,6 @@ y0 = 16/60
 point0 = np.array([x0, y0])
 periods = 20
 pillars = utl.pillars(pillar, D, N, G_X)
+d_particle = 5/(D+G_X)
 stream = utl.simulate_particle(
-    u, v, pillars, start_point=point0, periods=periods, plot=True)
+    d_particle, u, v, pillars, start_point=point0, periods=periods, plot=True)

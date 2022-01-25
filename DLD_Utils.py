@@ -252,7 +252,7 @@ class DLD_Utils:
 
         return u, v
 
-    def simulate_particle(self, u_interp, v_interp, pillars, start_point, periods=1, plot=False, figsize=(9, 4)):
+    def simulate_particle(self, d_particle, u_interp, v_interp, pillars, start_point, periods=1, plot=False, figsize=(9, 4)):
 
         shape = u_interp.shape
         xx = np.linspace(0, 1, shape[0])
@@ -286,11 +286,12 @@ class DLD_Utils:
 
             ax = plt.gca()
             for pillar in pillars:
-                ax.add_patch(PolygonPatch(pillar, fc='red'))
+                ax.add_patch(PolygonPatch(pillar, fc='red', ec='red'))
+                ax.add_patch(PolygonPatch(pillar.buffer(d_particle/2).difference(pillar), fc='blue'))
 
             fig.add_subplot(1, 2, 2)
             plt.plot(step_data[:, 0], step_data[:, 1])
-
+            
             plt.show()
 
         return stream
