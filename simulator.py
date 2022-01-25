@@ -7,6 +7,7 @@ N = 10
 D = 20
 G_X = 40
 G_R = 1
+Re = 1
 
 grid_size = (100, 100)
 utl = utl(resolution=grid_size)
