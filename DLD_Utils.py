@@ -213,7 +213,7 @@ class DLD_Utils:
 
         plt.show()
 
-    def psi2uv(self, psi, dx, dy, recover=True, plot=False, figsize=(8, 4)):
+    def gradient(self, psi, dx, dy, recover=True, plot=False, figsize=(8, 4)):
 
         u = np.gradient(psi, dy, axis=0)
         v = -np.gradient(psi, dx, axis=1)
@@ -224,7 +224,6 @@ class DLD_Utils:
 
         if plot:
             fig, axes = plt.subplots(1, 2, figsize=figsize)
-
             fig.subplots_adjust(left=0.1, wspace=0.5)
 
             im = axes[0].imshow(np.flip(u, axis=0), extent=[
@@ -256,39 +255,56 @@ class DLD_Utils:
         min_array = np.min(array, axis=1)
         array_minimized = array[MIN <= min_array]
         max_array_minimized = np.max(array_minimized, axis=1)
+
         return array_minimized[max_array_minimized <= MAX]
 
-    def wallfunc(self, grid, pillar):
+    def wallfunc(self, grid, pillar, plot=True):
+
         X = np.array([])
         Y = np.array([])
         for p in pillar: 
-            x,y = p.exterior.xy
+            x, y = p.exterior.xy
             xp = np.asarray(x)
             yp = np.asarray(y)
-            X = np.append(X,xp)
+            X = np.append(X, xp)
             Y = np.append(Y, yp)
             
-        pillars_coor = np.array((X,Y)).T
-        pillars_coor = self.box_delete(pillars_coor, 0, 1)
-        
+        pillars_coord = np.array((X, Y)).T
+        pillars_coord = self.box_delete(pillars_coord, 0, 1)
         _, mask_idx = self.pillar_mask(grid, pillar)
-        
         
         domain_idx = np.setdiff1d(np.arange(len(grid[0].flatten())), mask_idx)
         domain_x_grid = grid[0].flatten()[domain_idx]
         domain_y_grid = grid[1].flatten()[domain_idx]
         
-        
-        matrix = np.zeros(grid)
-        for x1, y1 in zip(domain_x_grid, domain_x_grid):
-            min_dis = 0
-            for x2, y2 in zip(pillars_coor[0], pillars_coor[1]):
-                dis = np.abs(np.sqrt((x1**2-x2**2) + (y1**2-y2**2)))
-                if dis < min_dis:
-                    min_dis = dis
+        wall_distance = np.zeros_like(grid[0])
+        size_x = grid[0].shape[0]
+        size_y = grid[0].shape[1]
+        for x, y in zip(domain_x_grid, domain_y_grid):
+            r = int(y * size_y)
+            if r == size_y:
+                r -= 1
             
-                    
-        return  
+            c = int(x * size_x)
+            if c == size_x:
+                c -= 1
+            
+            wall_distance[r, c] = np.amin(np.sqrt((x-pillars_coord[:, 0])**2 + (y-pillars_coord[:, 1])**2))
+
+        if plot:
+            fig = plt.figure()
+            ax = plt.gca()
+            im = plt.imshow(np.flip(wall_distance, axis=0), extent=[0, 1, 0, 1])
+            xc = ax.get_position().x0
+            wc = ax.get_position().width
+            yc = ax.get_position().y0
+            hc = ax.get_position().height
+            cbar_ax = fig.add_axes([xc+wc+0.02, yc, 0.02, hc])
+            fig.colorbar(im, cax=cbar_ax)
+
+            plt.show()
+
+        return wall_distance
 
     def simulate_particle(self, d_particle, u_interp, v_interp, pillars, start_point, periods=1, plot=False, figsize=(9, 4)):
 
@@ -296,6 +312,16 @@ class DLD_Utils:
         xx = np.linspace(0, 1, shape[0])
         yy = np.linspace(0, 1, shape[1])
         x_grid, y_grid = np.meshgrid(xx, yy)
+
+        dx = xx[1] - xx[0]
+        dy = yy[1] - yy[0]
+
+        wall_distance = self.wallfunc((x_grid, y_grid), pillars, plot=False)
+        dist_y, dist_x = self.gradient(wall_distance, dx, dy, recover=True, plot=False)
+
+        dist_mag = np.ma.sqrt(dist_x**2 + dist_y**2)
+        dist_x = - dist_x / dist_mag 
+        dist_y = dist_y / dist_mag
 
         stream = []
         for i in range(periods):
