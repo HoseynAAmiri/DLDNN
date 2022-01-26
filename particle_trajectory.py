@@ -1,16 +1,23 @@
+from attr import asdict
 import numpy as np
+from shapely.geometry import Point
+from shapely.geometry.polygon import Polygon
 
 __all__ = ['streamplot']
 
 
-def streamplot(x, y, u, v, start_point):
+def streamplot(xy, uv, nn, pillars, dp, start_point):
+
+    x, y = xy
+    u, v = uv
+    
     grid = Grid(x, y)
     dmap = DomainMap(grid)
 
     u = np.ma.masked_invalid(u)
     v = np.ma.masked_invalid(v)
 
-    integrate = _get_integrator(u, v, dmap)
+    integrate = _get_integrator(u, v, dmap, nn, pillars, dp)
     sp = np.asanyarray(start_point, dtype=float).copy()
 
     xs = sp[0]
@@ -32,6 +39,25 @@ def streamplot(x, y, u, v, start_point):
     trajectory = integrate(xg, yg)
 
     return np.divide(trajectory, [dmap.x_data2grid,  dmap.y_data2grid])
+
+# Reflection definition
+# ========================
+
+def reflect(nn, pillars, xp, yp, dp, up, vp):
+
+    nx, ny = nn
+    
+    nx = interpgrid(nx, xp, yp)
+    ny = interpgrid(ny, xp, yp)
+    
+    for pillar in pillars:
+        if pillar.buffer(1.1*dp/2).contains(Point((xp/100, yp/100))):
+            if (up * nx + vp * ny) < 0:
+                
+                up = -(2*vp*nx*ny-up*(ny**2-nx**2))
+                vp = -(2*up*nx*ny+vp*(ny**2-nx**2))
+                
+    return up, vp
 
 
 # Coordinate definitions
@@ -119,7 +145,7 @@ class TerminateTrajectory(Exception):
 # Integrator definitions
 # =======================
 
-def _get_integrator(u, v, dmap):
+def _get_integrator(u, v, dmap, nn, pillars, dp):
 
     # rescale velocity onto grid-coordinates for integrations.
     u, v = dmap.data2grid(u, v)
@@ -138,6 +164,8 @@ def _get_integrator(u, v, dmap):
         dt_ds = 1. / ds_dt
         ui = interpgrid(u, xi, yi)
         vi = interpgrid(v, xi, yi)
+
+        ui, vi = reflect(nn, pillars, xi, yi, dp, ui, vi)
         return ui * dt_ds, vi * dt_ds
 
     def integrate(x0, y0):
@@ -152,10 +180,8 @@ def _get_integrator(u, v, dmap):
     return integrate
 
 # @_api.deprecated("3.5")
-
-
-def get_integrator(u, v, dmap):
-    xy_traj = _get_integrator(u, v, dmap)
+def get_integrator(u, v, dmap, nn, pillars, dp):
+    xy_traj = _get_integrator(u, v, dmap, nn, pillars, dp)
     return (None if xy_traj is None
             else ([], []) if not len(xy_traj)
             else [*zip(*xy_traj)])

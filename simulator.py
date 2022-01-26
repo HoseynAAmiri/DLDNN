@@ -39,11 +39,10 @@ u, v = utl.gradient(psi_interp, dx*(D+G_X)*1e-6, dy *
                   (D+G_X*G_R)*1e-6, recover=True, plot=False)
 
 x0 = 0
-y0 = 16.2/(D+G_X)
+y0 = 30/(D+G_X)
 point0 = np.array([x0, y0])
-periods = 1
+periods = 30
 pillars = utl.pillars(pillar, D, N, G_X)
-d_particle = 0.01/(D+G_X)
-stream = utl.simulate_particle(
-    d_particle, u, v, pillars, start_point=point0, periods=periods, plot=False)
+d_particle = 10/(D+G_X)
+stream = utl.simulate_particle(d_particle, (u, v), pillars, point0, periods=periods, plot=True)
 

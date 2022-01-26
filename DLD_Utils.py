@@ -306,9 +306,9 @@ class DLD_Utils:
 
         return wall_distance
 
-    def simulate_particle(self, d_particle, u_interp, v_interp, pillars, start_point, periods=1, plot=False, figsize=(9, 4)):
+    def simulate_particle(self, dp, uv, pillars, start_point, periods=1, plot=False, figsize=(9, 4)):
 
-        shape = u_interp.shape
+        shape = uv[0].shape
         xx = np.linspace(0, 1, shape[0])
         yy = np.linspace(0, 1, shape[1])
         x_grid, y_grid = np.meshgrid(xx, yy)
@@ -317,16 +317,15 @@ class DLD_Utils:
         dy = yy[1] - yy[0]
 
         wall_distance = self.wallfunc((x_grid, y_grid), pillars, plot=False)
-        dist_y, dist_x = self.gradient(wall_distance, dx, dy, recover=True, plot=False)
+        ny, nx = self.gradient(wall_distance, dx, dy, recover=True, plot=False)
 
-        dist_mag = np.ma.sqrt(dist_x**2 + dist_y**2)
-        dist_x = - dist_x / dist_mag 
-        dist_y = dist_y / dist_mag
+        dist_mag = np.ma.sqrt(nx**2 + ny**2)
+        nx = - nx / dist_mag 
+        ny = ny / dist_mag
 
         stream = []
         for i in range(periods):
-            stream.append(ptj.streamplot(x_grid, y_grid, u_interp,
-                                         v_interp, start_point=start_point))
+            stream.append(ptj.streamplot((x_grid, y_grid), uv, (nx, ny), pillars, dp, start_point))
 
             if stream[i][-1, 0] >= 0.99:
                 start_point = stream[i][-1, :] - [1, 0]
@@ -349,12 +348,14 @@ class DLD_Utils:
 
             ax = plt.gca()
             for pillar in pillars:
-                ax.add_patch(PolygonPatch(pillar, fc='red', ec='red'))
+                ax.add_patch(PolygonPatch(pillar, fc='red'))
                 ax.add_patch(PolygonPatch(pillar.buffer(
-                    d_particle/2).difference(pillar), fc='blue'))
+                    dp/2).difference(pillar), fc='white', ec='#999999'))
 
             fig.add_subplot(1, 2, 2)
             plt.plot(step_data[:, 0], step_data[:, 1])
+            plt.xlim([0, 1])
+            plt.ylim([0, 1])
 
             plt.show()
 
