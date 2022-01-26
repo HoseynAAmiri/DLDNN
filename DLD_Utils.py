@@ -81,9 +81,7 @@ class DLD_Utils:
 
         return [pillar1ss, pillar2ss, pillar3ss, pillar4ss]
 
-    def pillar_mask(self, grid, pillar, D, N, G_X, G_R=1):
-
-        pillars = self.pillars(pillar, D, N, G_X, G_R=G_R)
+    def pillar_mask(self, grid, pillar):
 
         grid_points = np.array([grid[0].flatten(), grid[1].flatten()]).T
         grid_Points = [Point(p) for p in grid_points.tolist()]
@@ -91,8 +89,8 @@ class DLD_Utils:
         def contains(point):
 
             inside = False
-            for pillar in pillars:
-                if pillar.contains(point):
+            for p in pillar:
+                if p.contains(point):
                     inside = True
 
             return inside
@@ -163,11 +161,12 @@ class DLD_Utils:
         data_interp = griddata(mapped, data, (x_grid, y_grid), method=method)
 
         if recover:
-            nearest = griddata(mapped, data, (x_grid, y_grid), method='nearest')
+            nearest = griddata(
+                mapped, data, (x_grid, y_grid), method='nearest')
             data_interp[np.isnan(data_interp)] = nearest[np.isnan(data_interp)]
 
         return data_interp
-    
+
     def recover_uv(self, u, recover_with=0):
 
         sub_u_h = u[:, -3:]
@@ -252,6 +251,45 @@ class DLD_Utils:
 
         return u, v
 
+    def box_delete(self, array, MIN, MAX):
+        
+        min_array = np.min(array, axis=1)
+        array_minimized = array[MIN <= min_array]
+        max_array_minimized = np.max(array_minimized, axis=1)
+        return array_minimized[max_array_minimized <= MAX]
+
+    def wallfunc(self, grid, pillar):
+        X = np.array([])
+        Y = np.array([])
+        for p in pillar: 
+            x,y = p.exterior.xy
+            xp = np.asarray(x)
+            yp = np.asarray(y)
+            X = np.append(X,xp)
+            Y = np.append(Y, yp)
+            
+        pillars_coor = np.array((X,Y)).T
+        pillars_coor = self.box_delete(pillars_coor, 0, 1)
+        
+        _, mask_idx = self.pillar_mask(grid, pillar)
+        
+        
+        domain_idx = np.setdiff1d(np.arange(len(grid[0].flatten())), mask_idx)
+        domain_x_grid = grid[0].flatten()[domain_idx]
+        domain_y_grid = grid[1].flatten()[domain_idx]
+        
+        
+        matrix = np.zeros(grid)
+        for x1, y1 in zip(domain_x_grid, domain_x_grid):
+            min_dis = 0
+            for x2, y2 in zip(pillars_coor[0], pillars_coor[1]):
+                dis = np.abs(np.sqrt((x1**2-x2**2) + (y1**2-y2**2)))
+                if dis < min_dis:
+                    min_dis = dis
+            
+                    
+        return  
+
     def simulate_particle(self, d_particle, u_interp, v_interp, pillars, start_point, periods=1, plot=False, figsize=(9, 4)):
 
         shape = u_interp.shape
@@ -286,11 +324,12 @@ class DLD_Utils:
             ax = plt.gca()
             for pillar in pillars:
                 ax.add_patch(PolygonPatch(pillar, fc='red', ec='red'))
-                ax.add_patch(PolygonPatch(pillar.buffer(d_particle/2).difference(pillar), fc='blue'))
+                ax.add_patch(PolygonPatch(pillar.buffer(
+                    d_particle/2).difference(pillar), fc='blue'))
 
             fig.add_subplot(1, 2, 2)
             plt.plot(step_data[:, 0], step_data[:, 1])
-            
+
             plt.show()
 
         return stream

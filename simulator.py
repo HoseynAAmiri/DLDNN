@@ -13,7 +13,12 @@ grid_size = (100, 100)
 utl = utl(resolution=grid_size)
 x_grid, y_grid, dx, dy = utl.grid_data
 pillar = utl.pillar(D)
-xy_mask, mask_idx = utl.pillar_mask((x_grid, y_grid), pillar, D, N, G_X)
+pillars = utl.pillars(pillar, D, N, G_X)
+
+xy_mask, mask_idx = utl.pillar_mask((x_grid, y_grid), pillars)
+
+
+
 
 x_mapped, y_mapped = utl.parall2square(data[:, 0], data[:, 1], 1/N, D, G_X)
 psi, p = data[:, 2], data[:, 3]
@@ -34,16 +39,32 @@ compare = False
 if compare:
     utl.compare_plots(data1, data2)
 
+<<<<<<< HEAD
 u, v = utl.psi2uv(psi_interp, dx*(D+G_X)*1e-6, dy*(D+G_X*G_R)*1e-6, recover=True, plot=True)
 
 print(np.amax(v), np.amin(v))
 print(np.amax(u), np.amin(u))
+=======
+u, v = utl.psi2uv(psi_interp, dx, dy, recover=True, plot=False)
+>>>>>>> d58b782ffe3394f17c5c9aa37ca142a96367de28
 
 x0 = 0
 y0 = 16.2/(D+G_X)
 point0 = np.array([x0, y0])
+<<<<<<< HEAD
 periods = 1
 pillars = utl.pillars(pillar, D, N, G_X)
 d_particle = 0.01/(D+G_X)
+=======
+periods = 2
+
+d_particle = 5/(D+G_X)
+>>>>>>> d58b782ffe3394f17c5c9aa37ca142a96367de28
 stream = utl.simulate_particle(
-    d_particle, u, v, pillars, start_point=point0, periods=periods, plot=True)
+    d_particle, u, v, pillars, start_point=point0, periods=periods, plot=False)
+
+
+
+a, b =utl.wallfunc((x_grid, y_grid), pillars)
+
+
