@@ -3,9 +3,9 @@
 
 from keras.models import load_model
 import matplotlib.pyplot as plt
-from DLD_Utils import DLD_Util as utl
+from DLD_Utils import DLD_Utils as utl
 import numpy as np
-from DLD_Util import DLD_Util as utl
+from DLD_Utils import DLD_Utils as utl
 from Alpha_NN import NeuralNetwork
 
 utl = utl()
@@ -27,18 +27,18 @@ u_train, v_train, label_train = Data_Norm[0][train_ix], Data_Norm[1][train_ix], 
 u_test, v_test, label_test = Data_Norm[0][test_ix], Data_Norm[1][test_ix], Data_Norm[2][test_ix]
 
 #
-NN.train_AutoE(u_train, u_test, 10, batch_size=32)
-NN.autoencoder.save('model_autoencoder.h5')
-NN.train_DLDNN(label_train, u_train, label_test, u_test, 20, batch_size=32)
-NN.DLDNN.save('model_DLDNN.h5')
+#NN.train_AutoE(u_train, u_test, 10, batch_size=32)
+#NN.autoencoder.save('model_autoencoder.h5')
+#NN.train_DLDNN(label_train, u_train, label_test, u_test, 20, batch_size=32)
+#NN.DLDNN.save('model_DLDNN.h5')
 
 AutE = load_model('model_autoencod.h5')
 DLDNN = load_model('model_DLDNN.h5')
 
-u_AutE = AutE.predict(u_test)[:,:,:,0]
+u_AutE = AutE.predict(v_test)[:,:,:,0]
 u_DLD = DLDNN.predict(label_test)[:,:,:,0]
 
-NN.display(u_test, u_AutE, u_DLD)
+NN.display(v_test, u_AutE, u_DLD)
 
 
 # field prediction

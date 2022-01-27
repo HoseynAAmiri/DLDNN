@@ -7,6 +7,7 @@ from shapely.geometry.polygon import Polygon
 from descartes import PolygonPatch
 import particle_trajectory as ptj
 from DLD_Utils import DLD_Utils as utl
+utl=utl()
 
 class DLD_env:
     def __init__(self, pillar, Re, resolution=(100, 100)):
@@ -15,7 +16,8 @@ class DLD_env:
         self.Re = Re    
         self.resolution = resolution
         self.x_grid, self.y_grid, self.dx, self.dy = self.grid()
-
+        self.wd = self.wall_distance(plot=False)
+    # the grid configuration for this modeling is set in this function 
     def grid(self, grid_size=None):
 
         if not grid_size:
@@ -32,12 +34,13 @@ class DLD_env:
         dy = yy[1] - yy[0]
 
         return x_grid, y_grid, dx, dy
-   
+    # Wall distance is function which  measures the minimum distance between each point in the grid 
+    # from points on pillars
     def wall_distance(self, plot=True):
 
         X = np.array([])
         Y = np.array([])
-        for pillar in self.pillar: 
+        for pillar in self.pillar.pillars: 
             x, y = pillar.exterior.xy
             xp = np.asarray(x)
             yp = np.asarray(y)
@@ -45,8 +48,8 @@ class DLD_env:
             Y = np.append(Y, yp)
             
         pillars_coord = np.array((X, Y)).T
-        pillars_coord = self.box_delete(pillars_coord, 0, 1)
-        _, mask_idx = self.pillar.to_mask((self.x_grid, self.y_grid), pillar)
+        pillars_coord = utl.box_delete(pillars_coord, 0, 1)
+        _, mask_idx = self.pillar.to_mask((self.x_grid, self.y_grid))
         
         domain_idx = np.setdiff1d(np.arange(len(self.x_grid.flatten())), mask_idx)
         domain_x_grid = self.x_grid.flatten()[domain_idx]
@@ -55,7 +58,7 @@ class DLD_env:
         wall_distance = np.zeros_like(self.x_grid)
         size_x = self.resolution[0]
         size_y = self.resolution[1]
-        
+
         for x, y in zip(domain_x_grid, domain_y_grid):
             r = int(y * size_y)
             if r == size_y:
@@ -81,14 +84,14 @@ class DLD_env:
             plt.show()
 
         return wall_distance
-    
+    # this function simulate the particle trajectory by having domain shape, particle size and velocity fields
     def simulate_particle(self, dp, uv, pillars, start_point, periods=1, plot=False, figsize=(9, 4)):
 
-        wall_distance = self.wall_distance((self.x_grid, self.y_grid), pillars, plot=False)
-        ny, nx = self.gradient(wall_distance, self.dx, self.dy, recover=True, plot=False)
+        
+        nx, ny = utl.gradient(self.wd, self.dx, self.dy, recover=True)
 
         dist_mag = np.ma.sqrt(nx**2 + ny**2)
-        nx = - nx / dist_mag
+        nx = nx / dist_mag
         ny = ny / dist_mag
 
         stream = []
@@ -129,7 +132,8 @@ class DLD_env:
 
         return stream
 
-    
+# pillar class creates the domain from geometric parameters 
+# first one pillar is made then the other three are made accordingly. 
 class Pillar:
     def __init__(self, size, N, G_X, G_R=1, pillar_type='circle', origin=(0,0)):
 
@@ -151,8 +155,11 @@ class Pillar:
         
         self.pillar = affinity.translate(self.pillar, xoff=origin[0], yoff=origin[1])
         self.N, self.G_X, self.G_R = N, G_X, G_R
+        
+        # Other pillars are created automatically
         self.pillars = self.to_pillars()
-
+        
+    # The function creating other pillars from the initial one 
     def to_pillars(self):
 
         pillar1 = self.pillar
@@ -181,7 +188,8 @@ class Pillar:
         pillars = [pillar1ss, pillar2ss, pillar3ss, pillar4ss]
 
         return pillars
-
+    
+    # this function finds the grid points outside of the boundary by implementing pillars
     def to_mask(self, grid):
 
         pillars = self.pillars

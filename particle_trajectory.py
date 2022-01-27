@@ -17,7 +17,7 @@ def streamplot(xy, uv, nn, pillars, dp, start_point):
     u = np.ma.masked_invalid(u)
     v = np.ma.masked_invalid(v)
 
-    integrate = _get_integrator(u, v, dmap, nn, pillars, dp)
+    integrate = get_integrator(u, v, dmap, nn, pillars, dp)
     sp = np.asanyarray(start_point, dtype=float).copy()
 
     xs = sp[0]
@@ -145,7 +145,7 @@ class TerminateTrajectory(Exception):
 # Integrator definitions
 # =======================
 
-def _get_integrator(u, v, dmap, nn, pillars, dp):
+def get_integrator(u, v, dmap, nn, pillars, dp):
 
     # rescale velocity onto grid-coordinates for integrations.
     u, v = dmap.data2grid(u, v)
@@ -179,11 +179,7 @@ def _get_integrator(u, v, dmap, nn, pillars, dp):
 
     return integrate
 
-def get_integrator(u, v, dmap, nn, pillars, dp):
-    xy_traj = _get_integrator(u, v, dmap, nn, pillars, dp)
-    return (None if xy_traj is None
-            else ([], []) if not len(xy_traj)
-            else [*zip(*xy_traj)])
+
 
 
 class OutOfBounds(IndexError):
