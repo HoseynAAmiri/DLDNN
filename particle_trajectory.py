@@ -179,7 +179,6 @@ def _get_integrator(u, v, dmap, nn, pillars, dp):
 
     return integrate
 
-# @_api.deprecated("3.5")
 def get_integrator(u, v, dmap, nn, pillars, dp):
     xy_traj = _get_integrator(u, v, dmap, nn, pillars, dp)
     return (None if xy_traj is None

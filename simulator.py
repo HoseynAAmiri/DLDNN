@@ -1,5 +1,5 @@
 import numpy as np
-import matplotlib.pyplot as plt
+from DLD_env import DLD_env
 from DLD_Utils import DLD_Utils as utl
 
 data = np.genfromtxt("psi_p.csv", delimiter=",")
@@ -8,6 +8,9 @@ D = 20
 G_X = 40
 G_R = 1
 Re = 1
+
+pillar = DLD_env.Pillar(D, N, G_X, G_R)
+dld = DLD_env(pillar, Re)
 
 grid_size = (100, 100)
 utl = utl(resolution=grid_size)
@@ -18,7 +21,7 @@ xy_mask, mask_idx = utl.pillar_mask((x_grid, y_grid), pillars)
 
 x_mapped, y_mapped = utl.parall2square(data[:, 0], data[:, 1], 1/N, D, G_X)
 psi, p = data[:, 2], data[:, 3]
-data1 = tuple([x_mapped, y_mapped, psi, p])
+data1 = tuple([x_mapped, y_mapped, psi])
 
 psi_interp = utl.interp2grid(
     x_mapped, y_mapped, psi, x_grid, y_grid, method='linear', recover=False)
@@ -28,21 +31,21 @@ p_interp = utl.interp2grid(
 psi_interp = utl.insert_mask(psi_interp, mask_idx, mask_with=np.NaN)
 p_interp = utl.insert_mask(p_interp, mask_idx, mask_with=np.NaN)
 
-data2 = tuple([x_grid.flatten(), y_grid.flatten(),
-               psi_interp.flatten(), p_interp.flatten()])
+data2 = tuple([x_grid.flatten(), y_grid.flatten(), psi_interp.flatten()])
 
 compare = False
 if compare:
     utl.compare_plots(data1, data2)
 
-u, v = utl.gradient(psi_interp, dx*(D+G_X)*1e-6, dy *
+v, u = utl.gradient(psi_interp, dx*(D+G_X)*1e-6, dy *
                   (D+G_X*G_R)*1e-6, recover=True, plot=False)
+v = -v
 
 x0 = 0
 y0 = 30/(D+G_X)
 point0 = np.array([x0, y0])
-periods = 30
+periods = 20
 pillars = utl.pillars(pillar, D, N, G_X)
-d_particle = 10/(D+G_X)
+d_particle = 15/(D+G_X)
 stream = utl.simulate_particle(d_particle, (u, v), pillars, point0, periods=periods, plot=True)
 

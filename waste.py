@@ -5,7 +5,6 @@ from shapely.geometry import Point
 from shapely.geometry.polygon import Polygon
 from math import atan
 
-a = np.linspace(0, 1, 10)
-b = a * a.shape[0]
-
-print(b.astype(int), a.shape[0])
+a = np.array((0, 1))
+b = a+a
+print(b)
