@@ -32,10 +32,59 @@ class DLD_env:
         dy = yy[1] - yy[0]
 
         return x_grid, y_grid, dx, dy
+   
+    def wall_distance(self, plot=True):
+
+        X = np.array([])
+        Y = np.array([])
+        for pillar in self.pillar: 
+            x, y = pillar.exterior.xy
+            xp = np.asarray(x)
+            yp = np.asarray(y)
+            X = np.append(X, xp)
+            Y = np.append(Y, yp)
+            
+        pillars_coord = np.array((X, Y)).T
+        pillars_coord = self.box_delete(pillars_coord, 0, 1)
+        _, mask_idx = self.pillar.to_mask((self.x_grid, self.y_grid), pillar)
+        
+        domain_idx = np.setdiff1d(np.arange(len(self.x_grid.flatten())), mask_idx)
+        domain_x_grid = self.x_grid.flatten()[domain_idx]
+        domain_y_grid = self.y_grid.flatten()[domain_idx]
+        
+        wall_distance = np.zeros_like(self.x_grid)
+        size_x = self.resolution[0]
+        size_y = self.resolution[1]
+        
+        for x, y in zip(domain_x_grid, domain_y_grid):
+            r = int(y * size_y)
+            if r == size_y:
+                r -= 1
+            
+            c = int(x * size_x)
+            if c == size_x:
+                c -= 1
+            
+            wall_distance[r, c] = np.amin(np.sqrt((x-pillars_coord[:, 0])**2 + (y-pillars_coord[:, 1])**2))
+
+        if plot:
+            fig = plt.figure()
+            ax = plt.gca()
+            im = plt.imshow(np.flip(wall_distance, axis=0), extent=[0, 1, 0, 1])
+            xc = ax.get_position().x0
+            wc = ax.get_position().width
+            yc = ax.get_position().y0
+            hc = ax.get_position().height
+            cbar_ax = fig.add_axes([xc+wc+0.02, yc, 0.02, hc])
+            fig.colorbar(im, cax=cbar_ax)
+
+            plt.show()
+
+        return wall_distance
     
     def simulate_particle(self, dp, uv, pillars, start_point, periods=1, plot=False, figsize=(9, 4)):
 
-        wall_distance = self.wallfunc((self.x_grid, self.y_grid), pillars, plot=False)
+        wall_distance = self.wall_distance((self.x_grid, self.y_grid), pillars, plot=False)
         ny, nx = self.gradient(wall_distance, self.dx, self.dy, recover=True, plot=False)
 
         dist_mag = np.ma.sqrt(nx**2 + ny**2)
@@ -107,9 +156,9 @@ class Pillar:
     def to_pillars(self):
 
         pillar1 = self.pillar
-        pillar2 = affinity.translate(pillar1, xoff=pillar1.size+self.G_X, yoff=(pillar1.size+self.G_X*self.G_R)/self.N)
-        pillar3 = affinity.translate(pillar1, yoff=(pillar1.size+self.G_X*self.G_R))
-        pillar4 = affinity.translate(pillar2, yoff=(pillar1.size+self.G_X*self.G_R))
+        pillar2 = affinity.translate(pillar1, xoff=self.size+self.G_X, yoff=(self.size+self.G_X*self.G_R)/self.N)
+        pillar3 = affinity.translate(pillar1, yoff=(self.size+self.G_X*self.G_R))
+        pillar4 = affinity.translate(pillar2, yoff=(self.size+self.G_X*self.G_R))
 
         pillar1s = affinity.skew(
             pillar1, ys=-atan(1/self.N), origin=(0, 0), use_radians=True)
@@ -121,13 +170,13 @@ class Pillar:
             pillar4, ys=-atan(1/self.N), origin=(0, 0), use_radians=True)
 
         pillar1ss = affinity.scale(
-            pillar1s, xfact=1/(pillar1.size+self.G_X), yfact=1/(pillar1.size+self.G_X*self.G_R), zfact=1.0, origin=(0, 0))
+            pillar1s, xfact=1/(self.size+self.G_X), yfact=1/(self.size+self.G_X*self.G_R), zfact=1.0, origin=(0, 0))
         pillar2ss = affinity.scale(
-            pillar2s, xfact=1/(pillar1.size+self.G_X), yfact=1/(pillar1.size+self.G_X*self.G_R), zfact=1.0, origin=(0, 0))
+            pillar2s, xfact=1/(self.size+self.G_X), yfact=1/(self.size+self.G_X*self.G_R), zfact=1.0, origin=(0, 0))
         pillar3ss = affinity.scale(
-            pillar3s, xfact=1/(pillar1.size+self.G_X), yfact=1/(pillar1.size+self.G_X*self.G_R), zfact=1.0, origin=(0, 0))
+            pillar3s, xfact=1/(self.size+self.G_X), yfact=1/(self.size+self.G_X*self.G_R), zfact=1.0, origin=(0, 0))
         pillar4ss = affinity.scale(
-            pillar4s, xfact=1/(pillar1.size+self.G_X), yfact=1/(pillar1.size+self.G_X*self.G_R), zfact=1.0, origin=(0, 0))
+            pillar4s, xfact=1/(self.size+self.G_X), yfact=1/(self.size+self.G_X*self.G_R), zfact=1.0, origin=(0, 0))
 
         pillars = [pillar1ss, pillar2ss, pillar3ss, pillar4ss]
 

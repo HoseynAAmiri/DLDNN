@@ -13,6 +13,9 @@ to handling results coming from the generated data
 
 
 class DLD_Utils:
+    def __init__(self):
+        pass
+    
     def add_mask(self, data, grid, pillar, mask_with=0):
 
         xy_mask, _ = pillar.to_mask(grid)
@@ -49,8 +52,8 @@ class DLD_Utils:
         y_mapped = y - slope * x
 
         # Domain transformation from rectangular to unitariy square
-        X_mapped_MAX = pillar.D + pillar.G_X
-        Y_mapped_MAX = pillar.D + pillar.G_X * pillar.G_R
+        X_mapped_MAX = pillar.size + pillar.G_X
+        Y_mapped_MAX = pillar.size + pillar.G_X * pillar.G_R
 
         x_mapped = x_mapped / X_mapped_MAX
         y_mapped = y_mapped / Y_mapped_MAX
@@ -86,7 +89,7 @@ class DLD_Utils:
 
         return data_interp
 
-    def compare_plots(self, data1, data2, figsize=(6, 6)):
+    def compare_plots(self, data1, data2, figsize=(6, 3)):
 
         x, y, u, = data1[0], data1[1], data1[2]
         x_new, y_new, u_new, = data2[0], data2[1], data2[2]
