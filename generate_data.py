@@ -5,6 +5,7 @@ import time
 from tqdm import tqdm
 import pickle
 import numpy as np
+from DLD_env import DLD_env, Pillar
 from DLD_Utils import DLD_Utils as utl
 utl = utl()
 '''
@@ -14,6 +15,7 @@ G is the gap between pilarrs
 N is the periodic number of pillars lattice
 Re is the Reynols number
 '''
+
 
 def generate_data(simulator, D, N, G, Re):
 
@@ -73,6 +75,8 @@ def generate_data(simulator, D, N, G, Re):
                     time.sleep(0.1)
 
 # Changing raw data into data that are compatable to our neural network
+
+
 def compile_data(grid_size):
 
     x_grid_size = grid_size[0]
@@ -87,14 +91,14 @@ def compile_data(grid_size):
     folders = [name for name in os.listdir(
         directory) if os.path.isdir(os.path.join(directory, name))]
 
-    dataset_u = []
-    dataset_v = []
+    dataset_psi = []
+    dataset_p = []
     labels = []
     pbar1 = tqdm(total=len(folders), position=0, leave=True)
     for folder in folders:
         folder_dir = directory + "\\" + folder
         filesname = [os.path.splitext(filename)[0]
-                        for filename in os.listdir(folder_dir)]
+                     for filename in os.listdir(folder_dir)]
 
         pbar1.update(1)
         time.sleep(0.1)
@@ -108,39 +112,48 @@ def compile_data(grid_size):
             label = list(map(float, name.split('_')))
             d, n, g, re = label[0], label[1], label[2], label[3]
 
+            pillar = Pillar(d, n, g)
+
             labels.append(label)
 
             x_mapped, y_mapped = utl.parall2square(
-                data[:, 0], data[:, 1], 1/n, d, g)
-            u_mapped, v_mapped = utl.parall2square(
-                data[:, 2], data[:, 3], 1/n, d, g)
+                data[:, 0], data[:, 1], pillar)
 
-            u_interp = utl.interp2grid(x_mapped, y_mapped, u_mapped,
-                                        x_grid, y_grid)
-            v_interp = utl.interp2grid(x_mapped, y_mapped, v_mapped,
-                                        x_grid, y_grid)
+            psi_interp = utl.interp2grid(x_mapped, y_mapped, data[:, 2],
+                                         x_grid, y_grid)
+
+            p_interp = utl.interp2grid(x_mapped, y_mapped, data[:, 3],
+                                       x_grid, y_grid)
+
+            psi_interp = utl.insert_mask(
+                psi_interp, (x_grid, y_grid), pillar, mask_with=0)
+            
+            p_interp = utl.insert_mask(
+                p_interp, (x_grid, y_grid), pillar, mask_with=0)
 
             # Make dataset
-            dataset_u.append(u_interp)
-            dataset_v.append(v_interp)
+            dataset_psi.append(psi_interp)
+            dataset_p.append(p_interp)
 
             pbar2.update(1)
             time.sleep(0.1)
 
-    return (np.array(dataset_u), np.array(dataset_v), np.array(labels))
+    return (np.array(dataset_psi), np.array(dataset_p), np.array(labels))
+
 
 def save_data(data, name='data'):
     with open(name+".pickle", "wb") as f:
         pickle.dump(data, f)
 
+
 D = [10, 15, 20, 25, 30, 35, 40, 45, 50]
 N = [3, 4, 5, 6, 7, 8, 9, 10]
 G = [10, 15, 20, 25, 30, 35, 40, 45, 50]
-Re = [0.1, 0.2, 0.4, 0.8, 1, 2, 4, 6, 8, 10, 15, 20, 25, 30]
+Re = [0.01, 0.1, 0.2, 0.4, 0.8, 1, 2, 4, 6, 8, 10, 15, 20, 25, 30]
 
 grid_size = (100, 100)
 
-generate_data('DLD_COMSOL.mph', D, N, G, Re)
-dataset = compile_data(grid_size = grid_size)
-save_data(dataset, 'dataset')
+#generate_data('DLD_COMSOL.mph', D, N, G, Re)
 
+dataset = compile_data(grid_size=grid_size)
+save_data(dataset, 'dataset')

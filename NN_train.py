@@ -6,26 +6,25 @@ import matplotlib.pyplot as plt
 from DLD_Utils import DLD_Utils as utl
 import numpy as np
 from DLD_Utils import DLD_Utils as utl
-from Alpha_NN import NeuralNetwork
+from NeuralNetwork import NeuralNetwork
+
+
 
 utl = utl()
-merged_data = utl.load_data('merged_data')
 
+# loading dataset from pickle file  
+dataset = utl.load_data('dataset')
+
+# Initializing our Neural Network class
 NN = NeuralNetwork()
-Data_Norm, MAX_data = NN.preprocess(merged_data)
-#np.save('MAX_data', MAX_data)
+
+# spiliting and Normilizing data 
+Data_train, MAX_train, Data_test, MAX_test,  = NN.preprocess(dataset)
+
+"""
 grid_size = Data_Norm[0][0].shape
 label_size = Data_Norm[2][0].shape
-
 NN.create_model(grid_size, label_size, loss="mse", summary=True, plot=False)
-
-test_frac = 0.2
-train_ix = np.random.choice(len(Data_Norm[0]), size=int(
-    (1-test_frac)*len(Data_Norm[0])), replace=False)
-test_ix = np.setdiff1d(np.arange(len(Data_Norm[0])), train_ix)
-u_train, v_train, label_train = Data_Norm[0][train_ix], Data_Norm[1][train_ix], Data_Norm[2][train_ix]
-u_test, v_test, label_test = Data_Norm[0][test_ix], Data_Norm[1][test_ix], Data_Norm[2][test_ix]
-
 #
 #NN.train_AutoE(u_train, u_test, 10, batch_size=32)
 #NN.autoencoder.save('model_autoencoder.h5')
@@ -53,3 +52,5 @@ NN.display(v_test, u_AutE, u_DLD)
 #aute.display(u_test, encoded_imgs[:,:,:,1])
 #decoded_imgs = aute.decoder.predict(encoded_imgs)
 #aute.display(u_test, decoded_imgs)
+"""
+
