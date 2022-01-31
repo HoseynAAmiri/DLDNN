@@ -20,20 +20,20 @@ class NeuralNetwork():
             (1-test_frac)*len(input_array[0])), replace=False)
         test_ix = np.setdiff1d(np.arange(len(input_array[0])), train_ix)
 
-        psi_train, p_train, label_train = input_array[0][train_ix], input_array[1][train_ix], input_array[2][train_ix]
-        psi_test, p_test, label_test = input_array[0][test_ix], input_array[1][test_ix], input_array[2][test_ix]
+        psi_train, p_train, label_train = np.nan_to_num(input_array[0][train_ix]), np.nan_to_num(input_array[1][train_ix]), np.nan_to_num(input_array[2][train_ix])
+        psi_test, p_test, label_test = np.nan_to_num(input_array[0][test_ix]), np.nan_to_num(input_array[1][test_ix]), np.nan_to_num(input_array[2][test_ix])
 
         # Normilizing data and saving the Normilized value 
         
         Max_Train = []
         Max_Test = []
         
-        Max_Train.append(np.max(psi_train, axis=(1, 2), keepdims=True))
-        Max_Train.append(np.max(p_train, axis=(1, 2), keepdims=True))
+        Max_Train.append(np.max(psi_train, axis=(1,2), keepdims=True))
+        Max_Train.append(np.max(p_train, axis=(1,2), keepdims=True))
         Max_Train.append(np.amax(label_train, axis=1))
         
-        Max_Test.append(np.max(psi_test, axis=(1, 2), keepdims=True))
-        Max_Test.append(np.max(p_test, axis=(1, 2), keepdims=True))
+        Max_Test.append(np.max(psi_test, axis=(1,2), keepdims=True))
+        Max_Test.append(np.max(p_test, axis=(1,2), keepdims=True))
         Max_Test.append(np.amax(label_test, axis=1))
         
         output_psi_train = psi_train/Max_Train[0]
@@ -92,7 +92,7 @@ class NeuralNetwork():
         return indices
 
     def create_model(self, input_shape_field, input_shape_label,
-                     loss="binary_crossentropy", summary=False, plot=False):
+                     auteloss="binary_crossentropy", dldnnloss="mse", summary=False, plot=False):
 
         encoder_input = layers.Input(
             shape=(input_shape_field[0], input_shape_field[1], 1), name="original_img")
@@ -146,7 +146,7 @@ class NeuralNetwork():
         X = layers.Dropout(0.2)(X)
         X = layers.Dense(1024, activation="relu")(X)
         X = layers.Dropout(0.2)(X)
-        X = layers.Dense(2048, activation="relu")(X)
+        X = layers.Dense(4096, activation="relu")(X)
         X = layers.Dropout(0.2)(X)
         X = layers.Dense(4096, activation="relu")(X)
         X = layers.Dropout(0.2)(X)
@@ -165,8 +165,9 @@ class NeuralNetwork():
             self.DLDNN.summary()
 
         # compile
-        self.autoencoder.compile(optimizer="adam", loss=loss)
-        self.DLDNN.compile(optimizer="adam", loss=loss)
+        self.opt = keras.optimizers.Adam(learning_rate=0.01)
+        self.autoencoder.compile(optimizer=self.opt, loss=auteloss, metrics=['accuracy'])
+        self.DLDNN.compile(optimizer=self.opt, loss=dldnnloss,  metrics=['accuracy'])
 
         if plot:
             keras.utils.plot_model(self.autoencoder, "AutE_model.png", show_shapes=True)
@@ -174,7 +175,7 @@ class NeuralNetwork():
 
     def train_AutoE(self, train_data, test_data, epoch, batch_size=128):
 
-        self.autoencoder.fit(
+        history = self.autoencoder.fit(
             x=train_data,
             y=train_data,
             epochs=epoch,
@@ -182,10 +183,31 @@ class NeuralNetwork():
             shuffle=True,
             validation_data=(test_data, test_data)
         )
+        
+        fig = plt.figure(figsize=(6,4))
+        ax1 = fig.add_subplot(1, 2, 1)
+        plt.plot(history.history['accuracy'])
+        plt.plot(history.history['val_accuracy'])
+        plt.title('model accuracy')
+        plt.ylabel('accuracy')
+        plt.xlabel('epoch')
+        plt.legend(['train', 'test'], loc='upper left')
+
+
+        ax2 = fig.add_subplot(1, 2, 2)
+        plt.plot(history.history['loss'])
+        plt.plot(history.history['val_loss'])
+        plt.title('model loss')
+        plt.ylabel('loss')
+        plt.xlabel('epoch')
+        plt.legend(['train', 'test'], loc='upper left')
+
+        plt.show()
+        plt.savefig('accuracy and Loss autoencoder')
 
     def train_DLDNN(self, x_train, y_train, x_test, y_test, epoch, batch_size=128):
 
-        self.DLDNN.fit(
+        history = self.DLDNN.fit(
             x=x_train,
             y=y_train,
             epochs=epoch,
@@ -193,7 +215,28 @@ class NeuralNetwork():
             shuffle=True,
             validation_data=(x_test, y_test)
         )
+        
+        fig = plt.figure(figsize=(6,4))
+        fig.add_subplot(1, 2, 1)
+        plt.plot(history.history['accuracy'])
+        plt.plot(history.history['val_accuracy'])
+        plt.title('model accuracy')
+        plt.ylabel('accuracy')
+        plt.xlabel('epoch')
+        plt.legend(['train', 'test'], loc='upper left')
 
+
+        fig.add_subplot(1, 2, 2)
+        plt.plot(history.history['loss'])
+        plt.plot(history.history['val_loss'])
+        plt.title('model loss')
+        plt.ylabel('loss')
+        plt.xlabel('epoch')
+        plt.legend(['train', 'test'], loc='upper left')
+
+        plt.show()
+        plt.savefig('accuracy and Loss DLDNN')
+        
     def prediction(self, model, test_data, num_data=5):
         predictions = model.predict(test_data)[:, :, :, 0]
         self.display(test_data, predictions, num_data=num_data)
