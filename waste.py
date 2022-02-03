@@ -1,10 +1,12 @@
-from shapely.geometry import Point
 import matplotlib.pyplot as plt
 import numpy as np
-from shapely.geometry import Point
-from shapely.geometry.polygon import Polygon
-from math import atan
+from tqdm import tqdm
+import time
 
-a = np.array((0, 1))
-b = a+a
-print(b)
+z = [1, 2, 3, 4, 5]
+for i, i1 in zip(range(len(z)), tqdm(range(len(z)))):
+    time.sleep(0.1)
+        
+    for ii, i2 in zip(range(len(z)), tqdm(range(len(z)), leave=False)):
+        
+        time.sleep(1)

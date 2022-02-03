@@ -86,6 +86,9 @@ def compile_data(grid_size):
     yy = np.linspace(0, 1, y_grid_size)
     x_grid, y_grid = np.meshgrid(xx, yy)
 
+    dx = xx[1] - xx[0]
+    dy = yy[1] - yy[0]
+
     directory = os.getcwd() + "\\Data"
 
     folders = [name for name in os.listdir(
@@ -94,21 +97,17 @@ def compile_data(grid_size):
     dataset_psi = []
     dataset_p = []
     labels = []
-    pbar1 = tqdm(total=len(folders), position=0, leave=True)
-    for folder in folders:
+    for folder, p1 in zip(folders, tqdm(range(len(folders)))):
         folder_dir = directory + "\\" + folder
         filesname = [os.path.splitext(filename)[0]
                      for filename in os.listdir(folder_dir)]
 
-        pbar1.update(1)
         time.sleep(0.1)
 
-        pbar2 = tqdm(total=len(filesname), position=0, leave=True)
-        for name in filesname:
+        for name, p2 in zip(filesname, tqdm(range(len(filesname)))):
             data = np.genfromtxt(
                 folder_dir + "\\" + name + ".csv", delimiter=",")
-            data = np.nan_to_num(data)
-
+            
             label = list(map(float, name.split('_')))
             d, n, g, re = label[0], label[1], label[2], label[3]
 
@@ -119,27 +118,22 @@ def compile_data(grid_size):
             x_mapped, y_mapped = utl.parall2square(
                 data[:, 0], data[:, 1], pillar)
 
+            x_mapped[x_mapped > 1 - dx/2] = 1
+            y_mapped[y_mapped > 1 - dy/2] = 1
+
             psi_interp = utl.interp2grid(x_mapped, y_mapped, data[:, 2],
-                                         x_grid, y_grid)
+                                         x_grid, y_grid, recover=True)
 
             p_interp = utl.interp2grid(x_mapped, y_mapped, data[:, 3],
-                                       x_grid, y_grid)
-
-            psi_interp = utl.insert_mask(
-                psi_interp, (x_grid, y_grid), pillar, mask_with=0)
-            
-            p_interp = utl.insert_mask(
-                p_interp, (x_grid, y_grid), pillar, mask_with=0)
+                                       x_grid, y_grid, recover=True)
 
             # Make dataset
             dataset_psi.append(psi_interp)
             dataset_p.append(p_interp)
 
-            pbar2.update(1)
             time.sleep(0.1)
 
     return (np.array(dataset_psi), np.array(dataset_p), np.array(labels))
-
 
 def save_data(data, name='data'):
     with open(name+".pickle", "wb") as f:
@@ -151,9 +145,9 @@ N = [3, 4, 5, 6, 7, 8, 9, 10]
 G = [10, 15, 20, 25, 30, 35, 40, 45, 50]
 Re = [0.01, 0.1, 0.2, 0.4, 0.8, 1, 2, 4, 6, 8, 10, 15, 20, 25, 30]
 
-grid_size = (100, 100)
+grid_size = (128, 128)
 
-#generate_data('DLD_COMSOL.mph', D, N, G, Re)
+generate_data('DLD_COMSOL.mph', D, N, G, Re)
 
-dataset = compile_data(grid_size=grid_size)
+dataset = compile_data(grid_size)
 save_data(dataset, 'dataset')

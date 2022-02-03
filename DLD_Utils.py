@@ -110,7 +110,7 @@ class DLD_Utils:
     # Gradiant function simply gets a field as input and compute it's gradiant in x and y direction
     # here we used this function in two intences: first, coputing velocity vectors from psi field and
     # determining the normal vectors of pillars from wall distance function
-    def gradient(self, field, dx, dy, recover=True):
+    def gradient(self, field, dx, dy, recover=False):
 
         grad_x = np.gradient(field, dx, axis=1)
         grad_y = np.gradient(field, dy, axis=0)
