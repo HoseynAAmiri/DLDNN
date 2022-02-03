@@ -28,28 +28,26 @@ label_size = Data_train[2][0].shape
 
 # Create the Neural networks
 NN.create_model(grid_size, label_size, auteloss="mse",
-                dldnnloss="mse", summary=True, plot=False)
+                dldnnloss="mse", summary=False)
 
 # Train the Autoencoder
 if AutoE_train:
-    history = NN.train_AutoE(Data_train[0], Data_test[0], 20, batch_size=32)
+    history = NN.train_AutoE(Data_train[0], Data_test[0], 50, batch_size=32)
     NN.autoencoder.save('model_autoencoder.h5')
     np.save('AutoE_history.npy',history)
 
 #load the autoencoder weight for transfer learning 
-NN.autoencoder.load_weights('model_autoencoder_T1.h5')
+NN.autoencoder.load_weights('model_autoencoder_T150.h5')
 # freeze the decoder's weights
-NN.autoencoder.layers[2].trainable = False
-NN.DLDNN.summary()
+NN.decoder.trainable = False
+NN.compile_models()
 
-A = NN.autoencoder.get_weights()
 # Training the DLDNN network
 if DLDNN_train:
     history = NN.train_DLDNN(Data_train[2], Data_train[0],
-                   Data_test[2], Data_test[0], 3, batch_size=32)
+                   Data_test[2], Data_test[0], 100, batch_size=32)
     NN.DLDNN.save('model_DLDNN.h5')
     np.save('DLDNN_history.npy',history)
-B = NN.autoencoder.get_weights()
 # load the DLDNN model
 NN.DLDNN.load_weights('model_DLDNN.h5')
 # Make predictions by Autoencoder and DLDNN 
