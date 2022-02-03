@@ -97,9 +97,15 @@ class NeuralNetwork():
         encoder_input = layers.Input(
             shape=(input_shape_field[0], input_shape_field[1], 1), name="original_img")
         # Encoder
-        X = layers.Conv2D(32, (3, 3), activation="relu",
+        X = layers.Conv2D(16, (3, 3), activation="relu",
                           padding="same")(encoder_input)
         X = layers.MaxPooling2D((2, 2), padding="same")(X)
+        
+        X = layers.Conv2D(16, (3, 3), activation="relu",
+                          padding="same")(X)
+        X = layers.MaxPooling2D((2, 2), padding="same")(X)
+        
+
         X = layers.Conv2D(16, (3, 3), activation="relu", padding="same")(X)
         encoder_output = layers.MaxPooling2D((2, 2), padding="same")(X)
         self.encoder = Model(
@@ -108,14 +114,18 @@ class NeuralNetwork():
         if summary:
             self.encoder.summary()
         # Decoder
-        decoder_input = layers.Input(shape=(25, 25, 16), name="encoded_img")
+        decoder_input = layers.Input(shape=(16, 16, 16), name="encoded_img")
         X = layers.Conv2DTranspose(
             16, (3, 3), strides=2, activation="relu",
-            padding="same")(decoder_input
-                            )
-
+            padding="same")(decoder_input)
+        
         X = layers.Conv2DTranspose(
-            32, (3, 3), strides=2, activation="relu", padding="same")(X)
+            16, (3, 3),strides=2, activation="relu",
+            padding="same")(X)
+        
+        X = layers.Conv2DTranspose(
+            16, (3, 3),strides=2, activation="relu",
+            padding="same")(X)                  
         decoder_output = layers.Conv2D(
             1, (3, 3), activation="linear", padding="same")(X)
 
@@ -137,10 +147,8 @@ class NeuralNetwork():
 
         # Fully Conncted Neural network
         FCNN_input = layers.Input(shape = input_shape_label,  name="labels")
+       
         X = layers.Dense(64, activation="relu")(FCNN_input)
-        X = layers.Dense(128, activation="relu")(X)
-        X = layers.Dropout(0.2)(X)
-        X = layers.Dense(256, activation="relu")(X)
         X = layers.Dropout(0.2)(X)
         X = layers.Dense(512, activation="relu")(X)
         X = layers.Dropout(0.2)(X)
@@ -148,10 +156,7 @@ class NeuralNetwork():
         X = layers.Dropout(0.2)(X)
         X = layers.Dense(4096, activation="relu")(X)
         X = layers.Dropout(0.2)(X)
-        X = layers.Dense(4096, activation="relu")(X)
-        X = layers.Dropout(0.2)(X)
-        X = layers.Dense(10000, activation="relu")(X)
-        FCNN_output = layers.Reshape((25, 25, 16))(X)
+        FCNN_output = layers.Reshape((16, 16, 16))(X)
 
         self.FCNN = Model(FCNN_input, FCNN_output, name="FCNN")
         if summary:
@@ -184,17 +189,7 @@ class NeuralNetwork():
             validation_data=(test_data, test_data)
         )
         
-        fig = plt.figure(figsize=(6,4))
-        ax1 = fig.add_subplot(1, 2, 1)
-        plt.plot(history.history['accuracy'])
-        plt.plot(history.history['val_accuracy'])
-        plt.title('model accuracy')
-        plt.ylabel('accuracy')
-        plt.xlabel('epoch')
-        plt.legend(['train', 'test'], loc='upper left')
-
-
-        ax2 = fig.add_subplot(1, 2, 2)
+        plt.figure()
         plt.plot(history.history['loss'])
         plt.plot(history.history['val_loss'])
         plt.title('model loss')
@@ -203,7 +198,8 @@ class NeuralNetwork():
         plt.legend(['train', 'test'], loc='upper left')
 
         plt.show()
-        plt.savefig('accuracy and Loss autoencoder')
+
+        return history.history
 
     def train_DLDNN(self, x_train, y_train, x_test, y_test, epoch, batch_size=128):
 
@@ -216,17 +212,8 @@ class NeuralNetwork():
             validation_data=(x_test, y_test)
         )
         
-        fig = plt.figure(figsize=(6,4))
-        fig.add_subplot(1, 2, 1)
-        plt.plot(history.history['accuracy'])
-        plt.plot(history.history['val_accuracy'])
-        plt.title('model accuracy')
-        plt.ylabel('accuracy')
-        plt.xlabel('epoch')
-        plt.legend(['train', 'test'], loc='upper left')
-
-
-        fig.add_subplot(1, 2, 2)
+        plt.figure()
+        plt.subplot(1, 2, 2)
         plt.plot(history.history['loss'])
         plt.plot(history.history['val_loss'])
         plt.title('model loss')
@@ -235,7 +222,8 @@ class NeuralNetwork():
         plt.legend(['train', 'test'], loc='upper left')
 
         plt.show()
-        plt.savefig('accuracy and Loss DLDNN')
+
+        return history.history
         
     def prediction(self, model, test_data, num_data=5):
         predictions = model.predict(test_data)[:, :, :, 0]
