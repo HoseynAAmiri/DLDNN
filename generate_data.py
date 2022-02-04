@@ -56,7 +56,7 @@ def generate_data(simulator, D, N, G, Re):
             for g in G:
                 for re in Re:
                     # Set study's parameters
-                    param.set("Do", str(d) + "[um]")
+                    param.set("D", str(d) + "[um]")
                     param.set("N", str(n))
                     param.set("G", str(g) + "[um]")
                     param.set("Re", str(re))
@@ -118,9 +118,6 @@ def compile_data(grid_size):
             x_mapped, y_mapped = utl.parall2square(
                 data[:, 0], data[:, 1], pillar)
 
-            x_mapped[x_mapped > 1 - dx/2] = 1
-            y_mapped[y_mapped > 1 - dy/2] = 1
-
             psi_interp = utl.interp2grid(x_mapped, y_mapped, data[:, 2],
                                          x_grid, y_grid, recover=True)
 
@@ -139,15 +136,21 @@ def save_data(data, name='data'):
     with open(name+".pickle", "wb") as f:
         pickle.dump(data, f)
 
-
+'''
 D = [10, 15, 20, 25, 30, 35, 40, 45, 50]
 N = [3, 4, 5, 6, 7, 8, 9, 10]
 G = [10, 15, 20, 25, 30, 35, 40, 45, 50]
 Re = [0.01, 0.1, 0.2, 0.4, 0.8, 1, 2, 4, 6, 8, 10, 15, 20, 25, 30]
+'''
+
+D = [10, 20, 30, 40, 50]
+N = [3, 5, 7, 9]
+G = [10, 20, 30, 40, 50]
+RE = [0.01, 0.1, 0.2, 0.4, 0.8, 1]
 
 grid_size = (128, 128)
 
-generate_data('DLD_COMSOL.mph', D, N, G, Re)
+generate_data('DLD_COMSOL.mph', D, N, G, RE)
 
 dataset = compile_data(grid_size)
 save_data(dataset, 'dataset')
