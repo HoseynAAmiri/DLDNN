@@ -3,10 +3,10 @@ from DLD_env import DLD_env, Pillar
 from DLD_Utils import DLD_Utils as utl
 utl = utl()
 
-data = np.genfromtxt("40_3_20_1.csv", delimiter=",")
-D = 40
-N = 3
-G_X = 20
+data = np.genfromtxt("Data.csv", delimiter=",")
+D = 20
+N = 10
+G_X = 40
 G_R = 1
 Re = 1
 grid_size =(128, 128)
@@ -15,8 +15,6 @@ pillar = Pillar(D, N, G_X, G_R)
 dld = DLD_env(pillar, Re, resolution=grid_size)
 
 x_mapped, y_mapped = utl.parall2square(data[:, 0], data[:, 1], pillar)
-x_mapped[x_mapped > 1 - dld.dx/2] = 1
-y_mapped[y_mapped > 1 - dld.dy/2] = 1
 
 psi, p = data[:, 2], data[:, 3]
 data1 = tuple([x_mapped, y_mapped, psi])
@@ -28,11 +26,11 @@ p_interp = utl.interp2grid(
 
 data2 = tuple([dld.x_grid.flatten(), dld.y_grid.flatten(), psi_interp.flatten()])
 
-compare = True
+compare = False
 if compare:
     utl.compare_plots(data1, data2)
 
-v, u = utl.gradient(psi_interp, -dld.dx*(D+G_X)*1e-6, dld.dy*(D+G_X*G_R)*1e-6)
+v, u = utl.gradient(psi_interp, -dld.dx, dld.dy)
 
 '''
 x0 = 0
