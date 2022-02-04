@@ -9,7 +9,7 @@ from DLD_Utils import DLD_Utils as utl
 utl=utl()
 
 class PINN:
-    def __init__(self, x, y, D, N, G, Re, psi, p, layers):
+    def __init__(self, X, Y, D, N, G, Re, psi, p, layers):
         
         self.X = X
         self.Y = Y
@@ -171,19 +171,19 @@ if __name__ == "__main__":
     
     XX = np.tile(x_grid.flatten(), (1,L)) # N2 x l
     YY = np.tile(y_grid.flatten(), (1,L)) # N2 x l
-    DD = 
+    # DD = 
     
-    UU = U_star[:,0,:] # N x T
-    VV = U_star[:,1,:] # N x T
-    PP = P_star # N x T
+    # UU = U_star[:,0,:] # N x T
+    # VV = U_star[:,1,:] # N x T
+    # PP = P_star # N x T
     
-    x = XX.flatten()[:,None] # NT x 1
-    y = YY.flatten()[:,None] # NT x 1
-    t = TT.flatten()[:,None] # NT x 1
+    # x = XX.flatten()[:,None] # NT x 1
+    # y = YY.flatten()[:,None] # NT x 1
+    # t = TT.flatten()[:,None] # NT x 1
     
-    u = UU.flatten()[:,None] # NT x 1
-    v = VV.flatten()[:,None] # NT x 1
-    p = PP.flatten()[:,None] # NT x 1
+    # u = UU.flatten()[:,None] # NT x 1
+    # v = VV.flatten()[:,None] # NT x 1
+    # p = PP.flatten()[:,None] # NT x 1
     
     '''
     ######################################################################
