@@ -1,3 +1,4 @@
+@ -1,232 +0,0 @@
 from tensorflow.keras.models import Model
 from tensorflow.keras import layers
 from tensorflow import keras
@@ -92,7 +93,10 @@ class NeuralNetwork():
         return indices
 
     def create_model(self, input_shape_field, input_shape_label,
-                     auteloss="binary_crossentropy", dldnnloss="mse", summary=False, plot=False):
+                     auteloss="mse", dldnnloss="mse", summary=False):
+
+        self.auteloss  = auteloss        
+        self.dldnnloss = dldnnloss
 
         encoder_input = layers.Input(
             shape=(input_shape_field[0], input_shape_field[1], 1), name="original_img")
@@ -170,13 +174,12 @@ class NeuralNetwork():
             self.DLDNN.summary()
 
         # compile
-        self.opt = keras.optimizers.Adam(learning_rate=0.01)
-        self.autoencoder.compile(optimizer=self.opt, loss=auteloss, metrics=['accuracy'])
-        self.DLDNN.compile(optimizer=self.opt, loss=dldnnloss,  metrics=['accuracy'])
+        self.compile_models()
+        
 
-        if plot:
-            keras.utils.plot_model(self.autoencoder, "AutE_model.png", show_shapes=True)
-            keras.utils.plot_model(self.DLDNN, "AutE_model.png", show_shapes=True)
+    def compile_models(self):
+        self.autoencoder.compile(optimizer='adam', loss= self.auteloss)
+        self.DLDNN.compile(optimizer='adam', loss= self.dldnnloss)
 
     def train_AutoE(self, train_data, test_data, epoch, batch_size=128):
 
