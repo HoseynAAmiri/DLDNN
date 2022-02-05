@@ -1,4 +1,4 @@
-@ -1,232 +0,0 @@
+
 from tensorflow.keras.models import Model
 from tensorflow.keras import layers
 from tensorflow import keras
@@ -37,14 +37,14 @@ class NeuralNetwork():
         Max_Test.append(np.max(p_test, axis=(1,2), keepdims=True))
         Max_Test.append(np.amax(label_test, axis=1))
         
-        output_psi_train = psi_train/Max_Train[0]
-        output_p_train = p_train/Max_Train[1]
-        output_label_train = label_train/Max_Train[2][:,None]
+        output_psi_train = psi_train#/Max_Train[0]
+        output_p_train = p_train#/Max_Train[1]
+        output_label_train = label_train#/Max_Train[2][:,None]
         output_train = (output_psi_train, output_p_train, output_label_train)
         
-        output_psi_test = psi_test/Max_Test[0]
-        output_p_test = p_test/Max_Test[1]
-        output_label_test = label_test/Max_Test[2][:,None]
+        output_psi_test = psi_test#/Max_Test[0]
+        output_p_test = p_test#/Max_Test[1]
+        output_label_test = label_test#/Max_Test[2][:,None]
         output_test = (output_psi_test, output_p_test, output_label_test)
 
         return output_train, Max_Train, output_test, Max_Test
@@ -102,13 +102,12 @@ class NeuralNetwork():
             shape=(input_shape_field[0], input_shape_field[1], 1), name="original_img")
         # Encoder
         X = layers.Conv2D(16, (3, 3), activation="relu",
-                          padding="same")(encoder_input)
+                          padding="same")(encoder_input)        
         X = layers.MaxPooling2D((2, 2), padding="same")(X)
         
         X = layers.Conv2D(16, (3, 3), activation="relu",
                           padding="same")(X)
         X = layers.MaxPooling2D((2, 2), padding="same")(X)
-        
 
         X = layers.Conv2D(16, (3, 3), activation="relu", padding="same")(X)
         encoder_output = layers.MaxPooling2D((2, 2), padding="same")(X)
@@ -122,7 +121,7 @@ class NeuralNetwork():
         X = layers.Conv2DTranspose(
             16, (3, 3), strides=2, activation="relu",
             padding="same")(decoder_input)
-        
+                
         X = layers.Conv2DTranspose(
             16, (3, 3),strides=2, activation="relu",
             padding="same")(X)
@@ -156,9 +155,9 @@ class NeuralNetwork():
         X = layers.Dropout(0.2)(X)
         X = layers.Dense(512, activation="relu")(X)
         X = layers.Dropout(0.2)(X)
-        X = layers.Dense(1024, activation="relu")(X)
-        X = layers.Dropout(0.2)(X)
-        X = layers.Dense(4096, activation="relu")(X)
+        #X = layers.Dense(2048, activation="relu")(X)
+        #X = layers.Dropout(0.2)(X)
+        X = layers.Dense(4096, activation="linear")(X)
         X = layers.Dropout(0.2)(X)
         FCNN_output = layers.Reshape((16, 16, 16))(X)
 
@@ -172,14 +171,15 @@ class NeuralNetwork():
 
         if summary:
             self.DLDNN.summary()
-
+        # set optimizer
+        self.opt = keras.optimizers.Adam()
         # compile
         self.compile_models()
         
 
     def compile_models(self):
-        self.autoencoder.compile(optimizer='adam', loss= self.auteloss)
-        self.DLDNN.compile(optimizer='adam', loss= self.dldnnloss)
+        self.autoencoder.compile(optimizer=self.opt, loss= self.auteloss)
+        self.DLDNN.compile(optimizer=self.opt, loss= self.dldnnloss)
 
     def train_AutoE(self, train_data, test_data, epoch, batch_size=128):
 
@@ -216,7 +216,6 @@ class NeuralNetwork():
         )
         
         plt.figure()
-        plt.subplot(1, 2, 2)
         plt.plot(history.history['loss'])
         plt.plot(history.history['val_loss'])
         plt.title('model loss')
