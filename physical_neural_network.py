@@ -1,10 +1,10 @@
-from DLD_Utils import DLD_Utils as utl
-import time
-import numpy as np
-import tensorflow as tf
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
+import tensorflow as tf
+import time
+import numpy as np
+from DLD_Utils import DLD_Utils as utl
 
 class PINN:
     def __init__(self, x, y, D, N, G, Re, psi, p, layers):
