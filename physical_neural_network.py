@@ -3,15 +3,16 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 import tensorflow as tf
 import time
+from datetime import datetime
 import numpy as np
 from DLD_Utils import DLD_Utils as utl
 utl=utl()
-from datetime import datetime
+
 
 class PINN:
     def __init__(self, x, y, D, N, G, Re, psi, p, layers):
 
-        #tf.compat.v1.disable_eager_execution()
+        tf.compat.v1.disable_eager_execution()
 
         X = np.concatenate([x, y, D, N, G, Re], 1)
 
@@ -105,24 +106,24 @@ class PINN:
 
     def net_NS(self, x, y, D, N, G, Re):
         # Set up logging.
-        stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-        logdir = 'logs/func/%s' % stamp
-        writer = tf.summary.create_file_writer(logdir)
+        # stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+        # logdir = 'logs/func/%s' % stamp
+        # writer = tf.summary.create_file_writer(logdir)
 
         X = tf.concat([x, y, D, N, G, Re], 1)
 
         # Bracket the function call with
         # tf.summary.trace_on() and tf.summary.trace_export().
-        tf.summary.trace_on(graph=True, profiler=True)
+        # tf.summary.trace_on(graph=True, profiler=True)
         # Call only one tf.function when tracing.
 
             
         psi_and_p = self.neural_net(X, self.weights, self.biases)
-        with writer.as_default():
-            tf.summary.trace_export(
-                name="Neural_net_trace",
-                step=0,
-                profiler_outdir=logdir)
+        # with writer.as_default():
+        #     tf.summary.trace_export(
+        #         name="Neural_net_trace",
+        #         step=0,
+        #         profiler_outdir=logdir)
 
         psi = psi_and_p[:, 0:1]
         p = psi_and_p[:, 1:2]
@@ -149,7 +150,7 @@ class PINN:
         return psi, p, f_u, f_v
 
     def callback(self, loss_psi, loss_p, loss_f_u, loss_f_v):
-        print('loss_psi: %.5f, loss_p: %.5f, loss_f_u: %.5f, loss_f_v: %.5f' %
+        print('loss_psi: %.3e, loss_p: %.3e, loss_f_u: %.3e, loss_f_v: %.3e' %
               (loss_psi, loss_p, loss_f_u, loss_f_v))
 
     def train(self, nIter):
@@ -164,26 +165,22 @@ class PINN:
             # Print
             if it % 10 == 0:
                 elapsed = time.time() - start_time
-                loss = self.sess.run(self.loss, tf_dict)
-                # self.callback()
+                
+                loss_psi = self.sess.run(self.loss_psi, tf_dict)
+                loss_p = self.sess.run(self.loss_p, tf_dict)
+                loss_f_u = self.sess.run(self.loss_f_u, tf_dict)
+                loss_f_v = self.sess.run(self.loss_f_v, tf_dict)
+                loss = loss_psi + loss_p + loss_f_u + loss_f_v
 
                 print('It: %d, Loss: %.3e, Time: %.2f' %
                       (it, loss, elapsed))
+                self.callback(loss_psi, loss_p, loss_f_u, loss_f_v)
+
                 start_time = time.time()
-        
-        # saving weights and baias  
-        utl.save_data(self.weights, 'PINN_weights')
-        utl.save_data(self.biases, 'PINN_biases')
-        
-        # self.optimizer.minimize(self.sess,
-        #                         feed_dict = tf_dict,
-        #                         fetches = [self.loss],
-        #                         loss_callback = self.callback)
-
+                
     def predict(self, x, y, D, N, G, Re):
-
-        tf_dict = {self.x_tf: self.x, self.y_tf: self.y, self.D_tf: self.D,
-                   self.N_tf: self.N, self.G_tf: self.G, self.Re_tf: self.Re}
+        tf_dict = {self.x_tf: x, self.y_tf: y, self.D_tf: D,
+                   self.N_tf: N, self.G_tf: G, self.Re_tf: Re}
 
         psi = self.sess.run(self.psi_pred, tf_dict)
         p = self.sess.run(self.p_pred, tf_dict)
@@ -191,16 +188,14 @@ class PINN:
         return psi, p
         
 
-
 if __name__ == "__main__":
 
-    N_train = 1_000
+    N_train = 100_000
     nIter = 1_000
 
-    layers = [6, 20, 20, 20, 20, 20, 20, 20, 20, 2]
+    layers = [6, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 2]
 
     # Load Data
-    utl = utl()
     dataset = utl.load_data('dataset')
 
     psi = dataset[0]  # L x N x N
@@ -258,7 +253,8 @@ if __name__ == "__main__":
                  g_train, r_train, s_train, p_train, layers)
     model.train(nIter)
     # saving
-
+    utl.save_data(model.weights, 'PINN_weights')
+    utl.save_data(model.biases, 'PINN_biases')
     '''
     # Test Data
     snap = np.array([100])

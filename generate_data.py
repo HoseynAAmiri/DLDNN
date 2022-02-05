@@ -132,9 +132,6 @@ def compile_data(grid_size):
 
     return (np.array(dataset_psi), np.array(dataset_p), np.array(labels))
 
-def save_data(data, name='data'):
-    with open(name+".pickle", "wb") as f:
-        pickle.dump(data, f)
 
 '''
 D = [10, 15, 20, 25, 30, 35, 40, 45, 50]
@@ -153,4 +150,4 @@ grid_size = (128, 128)
 generate_data('DLD_COMSOL.mph', D, N, G, RE)
 
 dataset = compile_data(grid_size)
-save_data(dataset, 'dataset')
+utl.save_data(dataset, 'dataset')

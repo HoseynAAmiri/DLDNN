@@ -152,5 +152,5 @@ class DLD_Utils:
                 return pickle.load(f)
     
     def save_data(self, data, name='data'):
-            with open(name+".pickle", "w") as f:
+            with open(name+".pickle", "wb") as f:
                 return pickle.dump(data, f)
