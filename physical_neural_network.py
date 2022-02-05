@@ -10,12 +10,25 @@ tf1 = tf.compat.v1
 class PINN:
     def __init__(self, x, y, D, N, G, Re, psi, p, layers):
 
+        tf1.disable_eager_execution()
+
+        X = np.concatenate([x, y, D, N, G, Re], 1)
+        
+        self.lb = X.min(0)
+        self.ub = X.max(0)
+
         self.x = x
         self.y = y
+
         self.D = D
         self.N = N
         self.G = G
         self.Re = Re
+
+        
+        self.psi = psi
+        self.p = p
+
         self.layers = layers
 
         # Initialize NN
@@ -38,7 +51,7 @@ class PINN:
         self.p_tf = tf1.placeholder(tf.float32, shape=[None, self.p.shape[1]])
 
         self.psi_pred, self.p_pred, self.f_u_pred, self.f_v_pred = self.net_NS(
-            self.X_tf, self.y_tf, self.D, self.N, self.G, self.Re, self.layers)
+            self.x_tf, self.y_tf, self.D, self.N, self.G, self.Re)
 
         self.loss_psi = tf.math.reduce_sum(
             tf.math.square(self.psi_tf - self.psi_pred))
@@ -87,26 +100,27 @@ class PINN:
 
     def net_NS(self, x, y, D, N, G, Re):
 
-        psi_and_p = self.neural_net(
-            tf.concat([x, y], 1), self.weights, self.biases)
-        psi = psi_and_p[:, 0:1]
-        p = psi_and_p[:, 1:2]
+        X = tf.concat([x, y, D, N, G, Re], 1)
 
-        u = tf1.gradients(psi, y)[0]
-        v = -tf1.gradients(psi, x)[0]
+        psi_and_p = self.neural_net(X, self.weights, self.biases)
+        psi = psi_and_p[:, 0]
+        p = psi_and_p[:, 1]
 
-        u_x = tf1.gradients(u, x)[0]
-        u_y = tf1.gradients(u, y)[0]
-        u_xx = tf1.gradients(u_x, x)[0]
-        u_yy = tf1.gradients(u_y, y)[0]
+        u = tf.gradients(psi, y)[0]
+        v = -tf.gradients(psi, x)[0]
 
-        v_x = tf1.gradients(v, x)[0]
-        v_y = tf1.gradients(v, y)[0]
-        v_xx = tf1.gradients(v_x, x)[0]
-        v_yy = tf1.gradients(v_y, y)[0]
+        u_x = tf.gradients(u, x)[0]
+        u_y = tf.gradients(u, y)[0]
+        u_xx = tf.gradients(u_x, x)[0]
+        u_yy = tf.gradients(u_y, y)[0]
 
-        p_x = tf1.gradients(p, x)[0]
-        p_y = tf1.gradients(p, y)[0]
+        v_x = tf.gradients(v, x)[0]
+        v_y = tf.gradients(v, y)[0]
+        v_xx = tf.gradients(v_x, x)[0]
+        v_yy = tf.gradients(v_y, y)[0]
+
+        p_x = tf.gradients(p, x)[0]
+        p_y = tf.gradients(p, y)[0]
 
         f_u = (u*u_x + v*u_y) + p_x - (u_xx + u_yy) / Re
         f_v = (u*v_x + v*v_y) + p_y - (v_xx + v_yy) / Re
@@ -186,33 +200,33 @@ if __name__ == "__main__":
     SS = np.array(psi).reshape(L, N * N).T  # N2 x L
     PP = np.array(pre).reshape(L, N * N).T # N2 x L
 
-    x = XX.flatten() # N2L
-    y = YY.flatten() # N2L
+    x = XX.flatten()[:,None] # N2L
+    y = YY.flatten()[:,None] # N2L
 
-    d = DD.flatten() # N2L
-    n = NN.flatten() # N2L
-    g = PP.flatten() # N2L
-    r = RR.flatten() # N2L
+    d = DD.flatten()[:,None] # N2L
+    n = NN.flatten()[:,None] # N2L
+    g = PP.flatten()[:,None] # N2L
+    r = RR.flatten()[:,None] # N2L
     
-    s = SS.flatten() # N2L
-    p = PP.flatten() # N2L
+    s = SS.flatten()[:,None] # N2L
+    p = PP.flatten()[:,None] # N2L
 
 
     ######################################################################
     ######################## Noiseles Data ###############################
     ######################################################################
     # Training Data    
-    idx = np.random.choice(N * L, N_train, replace=False)
-    x_train = x[idx]
-    y_train = y[idx]
+    idx = np.random.choice(N * N * L, N_train, replace=False)
+    x_train = x[idx, :]
+    y_train = y[idx, :]
 
-    d_train = d[idx]
-    n_train = n[idx]
-    g_train = g[idx]
-    r_train = r[idx]
+    d_train = d[idx, :]
+    n_train = n[idx, :]
+    g_train = g[idx, :]
+    r_train = r[idx, :]
 
-    s_train = s[idx]
-    p_train = p[idx]    
+    s_train = s[idx, :]
+    p_train = p[idx, :]    
 
     # Training
     model = PINN(x_train, y_train, d_train, n_train, g_train, r_train, s_train, p_train, layers)
