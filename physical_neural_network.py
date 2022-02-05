@@ -5,6 +5,7 @@ import tensorflow as tf
 import time
 import numpy as np
 from DLD_Utils import DLD_Utils as utl
+utl=utl()
 from datetime import datetime
 
 class PINN:
@@ -169,7 +170,11 @@ class PINN:
                 print('It: %d, Loss: %.3e, Time: %.2f' %
                       (it, loss, elapsed))
                 start_time = time.time()
-
+        
+        # saving weights and baias  
+        utl.save_data(self.weights, 'PINN_weights')
+        utl.save_data(self.biases, 'PINN_biases')
+        
         # self.optimizer.minimize(self.sess,
         #                         feed_dict = tf_dict,
         #                         fetches = [self.loss],
@@ -190,7 +195,7 @@ class PINN:
 if __name__ == "__main__":
 
     N_train = 1_000
-    nIter = 10_000
+    nIter = 1_000
 
     layers = [6, 20, 20, 20, 20, 20, 20, 20, 20, 2]
 
@@ -252,6 +257,8 @@ if __name__ == "__main__":
     model = PINN(x_train, y_train, d_train, n_train,
                  g_train, r_train, s_train, p_train, layers)
     model.train(nIter)
+    # saving
+
     '''
     # Test Data
     snap = np.array([100])
