@@ -56,7 +56,7 @@ def reflect(nn, pillars, xp, yp, dp, up, vp):
                 
                 up = -(2*vp*nx*ny-up*(ny**2-nx**2))
                 vp = -(2*up*nx*ny+vp*(ny**2-nx**2))
-                
+    print(xp, yp)            
     return up, vp
 
 
