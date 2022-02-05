@@ -5,11 +5,12 @@ import tensorflow as tf
 import time
 import numpy as np
 from DLD_Utils import DLD_Utils as utl
+from datetime import datetime
 
 class PINN:
     def __init__(self, x, y, D, N, G, Re, psi, p, layers):
 
-        tf.compat.v1.disable_eager_execution()
+        #tf.compat.v1.disable_eager_execution()
 
         X = np.concatenate([x, y, D, N, G, Re], 1)
 
@@ -87,6 +88,7 @@ class PINN:
         xavier_stddev = np.sqrt(2/(in_dim + out_dim))
         return tf.Variable(tf.random.truncated_normal([in_dim, out_dim], stddev=xavier_stddev), dtype=tf.float32)
     
+    @tf.function
     def neural_net(self, X, weights, biases):
         num_layers = len(weights) + 1
         
@@ -101,10 +103,26 @@ class PINN:
         return Y
 
     def net_NS(self, x, y, D, N, G, Re):
+        # Set up logging.
+        stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+        logdir = 'logs/func/%s' % stamp
+        writer = tf.summary.create_file_writer(logdir)
 
         X = tf.concat([x, y, D, N, G, Re], 1)
 
+        # Bracket the function call with
+        # tf.summary.trace_on() and tf.summary.trace_export().
+        tf.summary.trace_on(graph=True, profiler=True)
+        # Call only one tf.function when tracing.
+
+            
         psi_and_p = self.neural_net(X, self.weights, self.biases)
+        with writer.as_default():
+            tf.summary.trace_export(
+                name="Neural_net_trace",
+                step=0,
+                profiler_outdir=logdir)
+
         psi = psi_and_p[:, 0:1]
         p = psi_and_p[:, 1:2]
 
@@ -166,6 +184,7 @@ class PINN:
         p = self.sess.run(self.p_pred, tf_dict)
 
         return psi, p
+        
 
 
 if __name__ == "__main__":
