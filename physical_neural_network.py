@@ -200,16 +200,16 @@ if __name__ == "__main__":
     SS = np.array(psi).reshape(L, N * N).T  # N2 x L
     PP = np.array(pre).reshape(L, N * N).T # N2 x L
 
-    x = XX.flatten()[:,None] # N2L
-    y = YY.flatten()[:,None] # N2L
+    x = XX.flatten()[:,None] # N2L x 1
+    y = YY.flatten()[:,None] # N2L x 1
 
-    d = DD.flatten()[:,None] # N2L
-    n = NN.flatten()[:,None] # N2L
-    g = PP.flatten()[:,None] # N2L
-    r = RR.flatten()[:,None] # N2L
+    d = DD.flatten()[:,None] # N2L x 1
+    n = NN.flatten()[:,None] # N2L x 1
+    g = PP.flatten()[:,None] # N2L x 1
+    r = RR.flatten()[:,None] # N2L x 1
     
-    s = SS.flatten()[:,None] # N2L
-    p = PP.flatten()[:,None] # N2L
+    s = SS.flatten()[:,None] # N2L x 1
+    p = PP.flatten()[:,None] # N2L x 1
 
 
     ######################################################################
