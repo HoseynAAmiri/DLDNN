@@ -1,31 +1,29 @@
+from DLD_Utils import DLD_Utils as utl
+import time
+import numpy as np
+import tensorflow as tf
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-import tensorflow as tf
-import numpy as np
-import time
-from DLD_Utils import DLD_Utils as utl
 
-tf1 = tf.compat.v1
 
 class PINN:
     def __init__(self, x, y, D, N, G, Re, psi, p, layers):
 
-        tf1.disable_eager_execution()
+        tf.compat.v1.disable_eager_execution()
 
         X = np.concatenate([x, y, D, N, G, Re], 1)
-        
+
         self.lb = X.min(0)
         self.ub = X.max(0)
 
-        self.x = x
-        self.y = y
+        self.x = X[:, 0:1]
+        self.y = X[:, 1:2]
 
-        self.D = D
-        self.N = N
-        self.G = G
-        self.Re = Re
+        self.D = X[:, 2:3]
+        self.N = X[:, 3:4]
+        self.G = X[:, 4:5]
+        self.Re = X[:, 5:6]
 
-        
         self.psi = psi
         self.p = p
 
@@ -35,61 +33,65 @@ class PINN:
         self.weights, self.biases = self.initialize_NN(self.layers)
 
         # tf placeholders and graph
-        self.sess = tf1.Session(config=tf1.ConfigProto(allow_soft_placement=True,
-                                                       log_device_placement=True))
+        self.sess = tf.compat.v1.Session(config=tf.compat.v1.ConfigProto(allow_soft_placement=True,
+                                                                         log_device_placement=True))
+
+        self.x_tf = tf.compat.v1.placeholder(
+            tf.float32, shape=[None, self.x.shape[1]])
+        self.y_tf = tf.compat.v1.placeholder(
+            tf.float32, shape=[None, self.y.shape[1]])
         
-        self.x_tf = tf1.placeholder(tf.float32, shape=[None, self.x.shape[1]])
-        self.y_tf = tf1.placeholder(tf.float32, shape=[None, self.y.shape[1]])
-        self.D_tf = tf1.placeholder(tf.float32, shape=[None, self.D.shape[1]])
-        self.N_tf = tf1.placeholder(tf.float32, shape=[None, self.N.shape[1]])
-        self.G_tf = tf1.placeholder(tf.float32, shape=[None, self.G.shape[1]])
-        self.Re_tf = tf1.placeholder(
+        self.D_tf = tf.compat.v1.placeholder(
+            tf.float32, shape=[None, self.D.shape[1]])
+        self.N_tf = tf.compat.v1.placeholder(
+            tf.float32, shape=[None, self.N.shape[1]])
+        self.G_tf = tf.compat.v1.placeholder(
+            tf.float32, shape=[None, self.G.shape[1]])
+        self.Re_tf = tf.compat.v1.placeholder(
             tf.float32, shape=[None, self.Re.shape[1]])
 
-        self.psi_tf = tf1.placeholder(
+        self.psi_tf = tf.compat.v1.placeholder(
             tf.float32, shape=[None, self.psi.shape[1]])
-        self.p_tf = tf1.placeholder(tf.float32, shape=[None, self.p.shape[1]])
+        self.p_tf = tf.compat.v1.placeholder(
+            tf.float32, shape=[None, self.p.shape[1]])
 
         self.psi_pred, self.p_pred, self.f_u_pred, self.f_v_pred = self.net_NS(
-            self.x_tf, self.y_tf, self.D, self.N, self.G, self.Re)
+            self.x_tf, self.y_tf, self.D_tf, self.N_tf, self.G_tf, self.Re_tf)
 
-        self.loss_psi = tf.math.reduce_sum(
-            tf.math.square(self.psi_tf - self.psi_pred))
-        self.loss_p = tf.math.reduce_sum(
-            tf.math.square(self.p_tf - self.p_pred))
-        self.loss_f_u = tf.math.reduce_sum(tf.math.square(self.f_u_pred))
-        self.loss_f_v = tf.math.reduce_sum(tf.math.square(self.f_v_pred))
+        self.loss_psi = tf.math.reduce_sum(tf.square(self.psi_tf - self.psi_pred))
+        self.loss_p = tf.math.reduce_sum(tf.square(self.p_tf - self.p_pred))
+        self.loss_f_u = tf.math.reduce_sum(tf.square(self.f_u_pred))
+        self.loss_f_v = tf.math.reduce_sum(tf.square(self.f_v_pred))
         self.loss = self.loss_psi + self.loss_p + self.loss_f_u + self.loss_f_v
 
-        self.optimizer_Adam = tf1.train.AdamOptimizer()
+        self.optimizer_Adam = tf.compat.v1.train.AdamOptimizer()
         self.train_op_Adam = self.optimizer_Adam.minimize(self.loss)
 
-        init = tf1.global_variables_initializer()
+        init = tf.compat.v1.global_variables_initializer()
         self.sess.run(init)
 
-    def initialize_NN(self, layers):
+    def initialize_NN(self, layers):        
         weights = []
         biases = []
-        num_layers = len(layers)
-        for l in range(0, num_layers-1):
-            W = self.Xavier_init(size=[layers[l], layers[l+1]])
-            b = tf.Variable(
-                tf.zeros([1, layers[l+1]], dtype=tf.float32), dtype=tf.float32)
+        num_layers = len(layers) 
+        for l in range(0,num_layers-1):
+            W = self.xavier_init(size=[layers[l], layers[l+1]])
+            b = tf.Variable(tf.zeros([1,layers[l+1]], dtype=tf.float32), dtype=tf.float32)
             weights.append(W)
-            biases.append(b)
+            biases.append(b)        
         return weights, biases
-
-    def Xavier_init(self, size):
+        
+    def xavier_init(self, size):
         in_dim = size[0]
-        out_dim = size[1]
-        Xavier_stddev = np.sqrt(2/(in_dim + out_dim))
-        return tf.Variable(tf1.truncated_normal([in_dim, out_dim], stddev=Xavier_stddev), dtype=tf.float32)
-
+        out_dim = size[1]        
+        xavier_stddev = np.sqrt(2/(in_dim + out_dim))
+        return tf.Variable(tf.random.truncated_normal([in_dim, out_dim], stddev=xavier_stddev), dtype=tf.float32)
+    
     def neural_net(self, X, weights, biases):
         num_layers = len(weights) + 1
-
+        
         H = 2.0*(X - self.lb)/(self.ub - self.lb) - 1.0
-        for l in range(0, num_layers-2):
+        for l in range(0,num_layers-2):
             W = weights[l]
             b = biases[l]
             H = tf.add(tf.matmul(H, W), b)
@@ -103,8 +105,8 @@ class PINN:
         X = tf.concat([x, y, D, N, G, Re], 1)
 
         psi_and_p = self.neural_net(X, self.weights, self.biases)
-        psi = psi_and_p[:, 0]
-        p = psi_and_p[:, 1]
+        psi = psi_and_p[:, 0:1]
+        p = psi_and_p[:, 1:2]
 
         u = tf.gradients(psi, y)[0]
         v = -tf.gradients(psi, x)[0]
@@ -168,7 +170,7 @@ class PINN:
 
 if __name__ == "__main__":
 
-    N_train = 100_000
+    N_train = 1_000
     nIter = 10_000
 
     layers = [6, 20, 20, 20, 20, 20, 20, 20, 20, 2]
@@ -187,35 +189,34 @@ if __name__ == "__main__":
     # Rearrange Data
     xx = np.linspace(0, 1, N)
     yy = np.linspace(0, 1, N)
-    x_grid, y_grid = np.meshgrid(xx, yy) # N x N
+    x_grid, y_grid = np.meshgrid(xx, yy)  # N x N
 
-    XX = np.tile(np.array([x_grid.flatten()]), (1, L)) # N2 x L
-    YY = np.tile(np.array([y_grid.flatten()]), (1, L)) # N2 x L
-    
-    DD = np.tile(np.array([l[:, 0]]), (N * N, 1)) # N2 x L
-    NN = np.tile(np.array([l[:, 1]]), (N * N, 1)) # N2 x L
-    GG = np.tile(np.array([l[:, 2]]), (N * N, 1)) # N2 x L
-    RR = np.tile(np.array([l[:, 3]]), (N * N, 1)) # N2 x L
-    
+    XX = np.tile(np.array([x_grid.flatten()]), (1, L))  # N2 x L
+    YY = np.tile(np.array([y_grid.flatten()]), (1, L))  # N2 x L
+
+    DD = np.tile(np.array([l[:, 0]]), (N * N, 1))  # N2 x L
+    NN = np.tile(np.array([l[:, 1]]), (N * N, 1))  # N2 x L
+    GG = np.tile(np.array([l[:, 2]]), (N * N, 1))  # N2 x L
+    RR = np.tile(np.array([l[:, 3]]), (N * N, 1))  # N2 x L
+
     SS = np.array(psi).reshape(L, N * N).T  # N2 x L
-    PP = np.array(pre).reshape(L, N * N).T # N2 x L
+    PP = np.array(pre).reshape(L, N * N).T  # N2 x L
 
-    x = XX.flatten()[:,None] # N2L x 1
-    y = YY.flatten()[:,None] # N2L x 1
+    x = XX.flatten()[:, None]  # N2L x 1
+    y = YY.flatten()[:, None]  # N2L x 1
 
-    d = DD.flatten()[:,None] # N2L x 1
-    n = NN.flatten()[:,None] # N2L x 1
-    g = PP.flatten()[:,None] # N2L x 1
-    r = RR.flatten()[:,None] # N2L x 1
-    
-    s = SS.flatten()[:,None] # N2L x 1
-    p = PP.flatten()[:,None] # N2L x 1
+    d = DD.flatten()[:, None]  # N2L x 1
+    n = NN.flatten()[:, None]  # N2L x 1
+    g = PP.flatten()[:, None]  # N2L x 1
+    r = RR.flatten()[:, None]  # N2L x 1
 
+    s = SS.flatten()[:, None]  # N2L x 1
+    p = PP.flatten()[:, None]  # N2L x 1
 
     ######################################################################
     ######################## Noiseles Data ###############################
     ######################################################################
-    # Training Data    
+    # Training Data
     idx = np.random.choice(N * N * L, N_train, replace=False)
     x_train = x[idx, :]
     y_train = y[idx, :]
@@ -226,10 +227,11 @@ if __name__ == "__main__":
     r_train = r[idx, :]
 
     s_train = s[idx, :]
-    p_train = p[idx, :]    
+    p_train = p[idx, :]
 
     # Training
-    model = PINN(x_train, y_train, d_train, n_train, g_train, r_train, s_train, p_train, layers)
+    model = PINN(x_train, y_train, d_train, n_train,
+                 g_train, r_train, s_train, p_train, layers)
     model.train(nIter)
     '''
     # Test Data
