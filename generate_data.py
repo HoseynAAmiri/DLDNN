@@ -123,15 +123,6 @@ def compile_data(grid_size):
 
             p_interp = utl.interp2grid(x_mapped, y_mapped, data[:, 3],
                                        x_grid, y_grid, recover=True)
-<<<<<<< Updated upstream
-=======
-
-            psi_interp = utl.insert_mask(
-                psi_interp, (x_grid, y_grid), pillar, mask_with=0)
-            
-            p_interp = utl.insert_mask(
-                p_interp, (x_grid, y_grid), pillar, mask_with=0)
->>>>>>> Stashed changes
 
             # Make dataset
             dataset_psi.append(psi_interp)
@@ -161,10 +152,5 @@ grid_size = (128, 128)
 
 generate_data('DLD_COMSOL.mph', D, N, G, RE)
 
-<<<<<<< Updated upstream
 dataset = compile_data(grid_size)
 save_data(dataset, 'dataset')
-=======
-dataset = compile_data(grid_size=grid_size)
-save_data(dataset, 'dataset128')
->>>>>>> Stashed changes
