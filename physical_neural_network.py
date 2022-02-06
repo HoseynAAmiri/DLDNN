@@ -36,8 +36,7 @@ class PINN:
         self.weights, self.biases = self.initialize_NN(self.layers)
 
         # tf placeholders and graph
-        self.sess = tf.compat.v1.Session(config=tf.compat.v1.ConfigProto(allow_soft_placement=True,
-                                                                         log_device_placement=True))
+        self.sess = tf.compat.v1.Session()
 
         self.x_tf = tf.compat.v1.placeholder(
             tf.float32, shape=[None, self.x.shape[1]])
@@ -61,10 +60,10 @@ class PINN:
         self.psi_pred, self.p_pred, self.f_u_pred, self.f_v_pred = self.net_NS(
             self.x_tf, self.y_tf, self.D_tf, self.N_tf, self.G_tf, self.Re_tf)
 
-        self.loss_psi = tf.math.reduce_sum(tf.square(self.psi_tf - self.psi_pred))
-        self.loss_p = tf.math.reduce_sum(tf.square(self.p_tf - self.p_pred))
-        self.loss_f_u = tf.math.reduce_sum(tf.square(self.f_u_pred))
-        self.loss_f_v = tf.math.reduce_sum(tf.square(self.f_v_pred))
+        self.loss_psi = tf.reduce_sum(tf.square(self.psi_tf - self.psi_pred))
+        self.loss_p = tf.reduce_sum(tf.square(self.p_tf - self.p_pred))
+        self.loss_f_u = tf.reduce_sum(tf.square(self.f_u_pred))
+        self.loss_f_v = tf.reduce_sum(tf.square(self.f_v_pred))
         self.loss = self.loss_psi + self.loss_p + self.loss_f_u + self.loss_f_v
 
         self.optimizer_Adam = tf.compat.v1.train.AdamOptimizer()
@@ -152,6 +151,11 @@ class PINN:
     def callback(self, loss_psi, loss_p, loss_f_u, loss_f_v):
         print('loss_psi: %.3e, loss_p: %.3e, loss_f_u: %.3e, loss_f_v: %.3e' %
               (loss_psi, loss_p, loss_f_u, loss_f_v))
+    
+    def load_model(self, weights, biases):
+
+        self.weights = weights
+        self.biases = biases
 
     def train(self, nIter):
 
@@ -177,7 +181,15 @@ class PINN:
                 self.callback(loss_psi, loss_p, loss_f_u, loss_f_v)
 
                 start_time = time.time()
-                
+    
+    def save_model(self, name='model'):
+        saver = tf.compat.v1.train.Saver()
+        saver.save(self.sess, name+".ckpt")
+
+    def load_model(self, name='model'):
+        saver = tf.compat.v1.train.Saver()
+        saver.restore(self.sess, name+".ckpt")
+
     def predict(self, x, y, D, N, G, Re):
         tf_dict = {self.x_tf: x, self.y_tf: y, self.D_tf: D,
                    self.N_tf: N, self.G_tf: G, self.Re_tf: Re}
@@ -186,12 +198,13 @@ class PINN:
         p = self.sess.run(self.p_pred, tf_dict)
 
         return psi, p
+    
         
 
 if __name__ == "__main__":
 
-    N_train = 100_000
-    nIter = 1_000
+    N_train = 1_000
+    nIter = 10
 
     layers = [6, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 2]
 
@@ -253,55 +266,31 @@ if __name__ == "__main__":
                  g_train, r_train, s_train, p_train, layers)
     model.train(nIter)
     # saving
-    utl.save_data(model.weights, 'PINN_weights')
-    utl.save_data(model.biases, 'PINN_biases')
-    '''
+    model.save_model(name='model')
+
     # Test Data
     snap = np.array([100])
-    x_star = X_star[:,0:1]
-    y_star = X_star[:,1:2]
-    t_star = TT[:,snap]
-    
-    u_star = U_star[:,0,snap]
-    v_star = U_star[:,1,snap]
-    p_star = P_star[:,snap]
-    
+
+    d_test = d[:,0,snap]
+    n_test = n[:,0,snap]
+    g_test = g[:,0,snap]
+    r_test = r[:,0,snap]
+
+    s_test = s[:,snap]
+    p_test = p[:,snap]
+
     # Prediction
-    u_pred, v_pred, p_pred = model.predict(x_star, y_star, t_star)
-    lambda_1_value = model.sess.run(model.lambda_1)
-    lambda_2_value = model.sess.run(model.lambda_2)
+    s_pred, p_pred = model.predict(x, y, d_test, n_test, g_test, r_test)
     
     # Error
-    error_u = np.linalg.norm(u_star-u_pred,2)/np.linalg.norm(u_star,2)
-    error_v = np.linalg.norm(v_star-v_pred,2)/np.linalg.norm(v_star,2)
-    error_p = np.linalg.norm(p_star-p_pred,2)/np.linalg.norm(p_star,2)
+    error_s = np.linalg.norm(s_test-s_pred,2)/np.linalg.norm(s_test,2)
+    error_p = np.linalg.norm(p_test-p_pred,2)/np.linalg.norm(p_test,2)
 
-    error_lambda_1 = np.abs(lambda_1_value - 1.0)*100
-    error_lambda_2 = np.abs(lambda_2_value - 0.01)/0.01 * 100
-    
-    print('Error u: %e' % (error_u))    
-    print('Error v: %e' % (error_v))    
+    print('Error psi: %e' % (error_s))       
     print('Error p: %e' % (error_p))    
-    print('Error l1: %.5f%%' % (error_lambda_1))                             
-    print('Error l2: %.5f%%' % (error_lambda_2))                  
     
     # Plot Results
-#    plot_solution(X_star, u_pred, 1)
-#    plot_solution(X_star, v_pred, 2)
-#    plot_solution(X_star, p_pred, 3)    
-#    plot_solution(X_star, p_star, 4)
-#    plot_solution(X_star, p_star - p_pred, 5)
-    
-    # Predict for plotting
-    lb = X_star.min(0)
-    ub = X_star.max(0)
-    nn = 200
-    x = np.linspace(lb[0], ub[0], nn)
-    y = np.linspace(lb[1], ub[1], nn)
-    X, Y = np.meshgrid(x,y)
-    
-    UU_star = griddata(X_star, u_pred.flatten(), (X, Y), method='cubic')
-    VV_star = griddata(X_star, v_pred.flatten(), (X, Y), method='cubic')
-    PP_star = griddata(X_star, p_pred.flatten(), (X, Y), method='cubic')
-    P_exact = griddata(X_star, p_star.flatten(), (X, Y), method='cubic')
-    '''
+#    plot_solution(x, psi_pred, 1)
+#    plot_solution(x, p_pred, 2)
+#    plot_solution(x, s_test - s_pred, 3)
+#    plot_solution(x, p_test - p_pred, 4)

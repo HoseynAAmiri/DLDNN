@@ -148,9 +148,9 @@ class DLD_Utils:
         return array_minimized[max_array_minimized <= MAX]
 
     def load_data(self, name='data'):
-        with open(name+".pickle", "rb") as f:
-                return pickle.load(f)
+        with open(name+".pickle", "rb") as file:
+                return pickle.load(file)
     
     def save_data(self, data, name='data'):
-            with open(name+".pickle", "wb") as f:
-                return pickle.dump(data, f)
+        with open(name+".pickle", "wb+") as file:
+            pickle.dump(data, file)
