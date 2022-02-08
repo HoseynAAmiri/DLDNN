@@ -1,6 +1,7 @@
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import tensorflow as tf
+from tensorflow.keras import backend as K
 from tensorflow.keras.models import Model
 from tensorflow.keras import layers
 from tensorflow import keras
@@ -19,9 +20,7 @@ class PINN:
         input = keras.Input(shape=input_shape, name = "Network_Input")
         
         for i, layer in enumerate(hidden_layers):
-            print(i, layer)
             if i==0:
-                print('sanjol')
                 X = layers.Dense(layer, activation="relu")(input)
                 X = layers.Dropout(0.2)(X)
             else:
@@ -29,7 +28,7 @@ class PINN:
                 X = layers.Dropout(0.2)(X)
 
         output = layers.Dense(output_shape, activation='linear')(X)
-        self.neural_net = Model(X, output, name="neural_net")
+        self.neural_net = Model(input, output, name="neural_net")
 
         if summary:
             self.neural_net.summary()
@@ -46,21 +45,20 @@ class PINN:
                 p_true = y_true[:, 1]
                 p_pred = y_pred[:, 1]
 
-                self.loss_psi = tf.reduce_sum(tf.square(psi_true - psi_pred))
-                self.loss_p = tf.reduce_sum(tf.square(p_true - p_pred))
-                self.loss_f_u = tf.reduce_sum(tf.square(f_u))
-                self.loss_f_v = tf.reduce_sum(tf.square(f_v))
+                self.loss_psi = K.sum(K.square(psi_true - psi_pred))
+                self.loss_p = K.sum(K.square(p_true - p_pred))
+                self.loss_f_u = K.sum(K.square(f_u))
+                self.loss_f_v = K.sum(K.square(f_v))
                 self.loss = self.loss_psi + self.loss_p + self.loss_f_u + self.loss_f_v
+
                 return self.loss
 
             return nested_loss
                 
         self.neural_net.compile(optimizer=self.opt, loss=pinn_loss_function(input))
     
-
-
     def net_NS(self, NN_input, NN_output):
-            
+
         x = NN_input[:, 0:1]
         y = NN_input[:, 1:2]
         Re = NN_input[:, 5:6]
@@ -68,21 +66,36 @@ class PINN:
         psi = NN_output[:, 0:1]
         p = NN_output[:, 1:2]
 
-        u = tf.gradients(psi, y)[0]
-        v = -tf.gradients(psi, x)[0]
+        u = K.gradients(psi, y)[0]
+        v = -K.gradients(psi, x)[0]
+        p_x = K.gradients(p, x)[0]
+        p_y = K.gradients(p, y)[0]
 
-        u_x = tf.gradients(u, x)[0]
-        u_y = tf.gradients(u, y)[0]
-        u_xx = tf.gradients(u_x, x)[0]
-        u_yy = tf.gradients(u_y, y)[0]
+        u_x = K.gradients(u, x)[0]
+        u_y = K.gradients(u, y)[0]
+        v_x = K.gradients(v, x)[0]
+        v_y = K.gradients(v, y)[0]
 
-        v_x = tf.gradients(v, x)[0]
-        v_y = tf.gradients(v, y)[0]
-        v_xx = tf.gradients(v_x, x)[0]
-        v_yy = tf.gradients(v_y, y)[0]
+        u_xx = K.gradients(u_x, x)[0]
+        u_yy = K.gradients(u_y, y)[0]
+        v_xx = K.gradients(v_x, x)[0]
+        v_yy = K.gradients(v_y, y)[0]
 
-        p_x = tf.gradients(p, x)[0]
-        p_y = tf.gradients(p, y)[0]
+        # u = tf.gradients(psi, y)[0]
+        # v = -tf.gradients(psi, x)[0]
+
+        # u_x = tf.gradients(u, x)[0]
+        # u_y = tf.gradients(u, y)[0]
+        # u_xx = tf.gradients(u_x, x)[0]
+        # u_yy = tf.gradients(u_y, y)[0]
+
+        # v_x = tf.gradients(v, x)[0]
+        # v_y = tf.gradients(v, y)[0]
+        # v_xx = tf.gradients(v_x, x)[0]
+        # v_yy = tf.gradients(v_y, y)[0]
+
+        # p_x = tf.gradients(p, x)[0]
+        # p_y = tf.gradients(p, y)[0]
 
         f_u = (u*u_x + v*u_y) + p_x - (u_xx + u_yy) / Re
         f_v = (u*v_x + v*v_y) + p_y - (v_xx + v_yy) / Re
@@ -187,7 +200,7 @@ if __name__ == "__main__":
     y_nn_test = np.concatenate([s_test, p_test], 1)
     
     # Training
-    model = PINN(X_nn_train.shape[1], y_nn_train.shape[1], hidden_layers, summary=True)
+    model = PINN(X_nn_train.shape[1], y_nn_train.shape[1], hidden_layers, summary=False)
     
     model.train(X_nn_train, y_nn_train, X_nn_test, y_nn_test, epoch, batch_size)
     # saving
