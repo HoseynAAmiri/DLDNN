@@ -10,15 +10,19 @@ import numpy as np
 from DLD_Utils import DLD_Utils as utl
 utl=utl()
 
+from tensorflow.python.framework.ops import disable_eager_execution
+disable_eager_execution()
+
 
 class PINN:
     def __init__(self, input_shape, output_shape, hidden_layers, summary=False):
         self.create_model(input_shape, output_shape, hidden_layers, summary=summary)
-
+    @tf.function
     def create_model(self, input_shape, output_shape, hidden_layers, summary=False):
            
-        input = keras.Input(shape=input_shape, name = "Network_Input")
-        
+        input = layers.Input(shape=input_shape, name = "Network_Input")
+        output_true = layers.Input(shape=output_shape, name="true_output")
+
         for i, layer in enumerate(hidden_layers):
             if i==0:
                 X = layers.Dense(layer, activation="relu")(input)
@@ -28,34 +32,33 @@ class PINN:
                 X = layers.Dropout(0.2)(X)
 
         output = layers.Dense(output_shape, activation='linear')(X)
-        self.neural_net = Model(input, output, name="neural_net")
+        self.neural_net = Model(inputs=[input,output_true], outputs=output, name="neural_net")
 
         if summary:
             self.neural_net.summary()
         # set optimizer
         self.opt = keras.optimizers.Adam()
         
-        def pinn_loss_function(input):
-        # Defining physics informed loss function
-            def nested_loss(y_true, y_pred):
-                
-                f_u, f_v = self.net_NS(input, y_pred)
-                psi_true = y_true[:, 0]
-                psi_pred = y_pred[:, 0]
-                p_true = y_true[:, 1]
-                p_pred = y_pred[:, 1]
 
-                self.loss_psi = K.sum(K.square(psi_true - psi_pred))
-                self.loss_p = K.sum(K.square(p_true - p_pred))
-                self.loss_f_u = K.sum(K.square(f_u))
-                self.loss_f_v = K.sum(K.square(f_v))
-                self.loss = self.loss_psi + self.loss_p + self.loss_f_u + self.loss_f_v
+        def nested_loss(output_true, output, input):
+            
+            f_u, f_v = self.net_NS(input, output)
+            psi_true = output_true[:, 0]
+            psi_pred = output[:, 0]
+            p_true = output_true[:, 1]
+            p_pred = output[:, 1]
 
-                return self.loss
+            self.loss_psi = K.sum(K.square(psi_true - psi_pred))
+            self.loss_p = K.sum(K.square(p_true - p_pred))
+            self.loss_f_u = K.sum(K.square(f_u))
+            self.loss_f_v = K.sum(K.square(f_v))
+            self.loss = self.loss_psi + self.loss_p + self.loss_f_u + self.loss_f_v
 
-            return nested_loss
-                
-        self.neural_net.compile(optimizer=self.opt, loss=pinn_loss_function(input))
+            return self.loss
+
+            
+        self.neural_net.add_loss(nested_loss(output_true, output, input))       
+        self.neural_net.compile(optimizer=self.opt, loss=None)
     
     def net_NS(self, NN_input, NN_output):
 
@@ -64,38 +67,48 @@ class PINN:
         Re = NN_input[:, 5:6]
 
         psi = NN_output[:, 0:1]
-        p = NN_output[:, 1:2]
+        p = NN_output[:, 1:2] 
+        # with tf.GradientTape() as tape3:
+        #     with tf.GradientTape() as tape2:
+        #         with tf.GradientTape() as tape1:
 
-        u = K.gradients(psi, y)[0]
-        v = -K.gradients(psi, x)[0]
-        p_x = K.gradients(p, x)[0]
-        p_y = K.gradients(p, y)[0]
+        #             x = NN_input[:, 0:1]
+        #             y = NN_input[:, 1:2]
+        #             Re = NN_input[:, 5:6]
 
-        u_x = K.gradients(u, x)[0]
-        u_y = K.gradients(u, y)[0]
-        v_x = K.gradients(v, x)[0]
-        v_y = K.gradients(v, y)[0]
+        #             psi = NN_output[:, 0:1]
+        #             p = NN_output[:, 1:2]
 
-        u_xx = K.gradients(u_x, x)[0]
-        u_yy = K.gradients(u_y, y)[0]
-        v_xx = K.gradients(v_x, x)[0]
-        v_yy = K.gradients(v_y, y)[0]
+        #         u = tape1.gradient(psi, y)
+        #         v = -tape1.gradient(psi, x)
+        #         p_x = tape1.gradient(p, x)
+        #         p_y = tape1.gradient(p, y)
 
-        # u = tf.gradients(psi, y)[0]
-        # v = -tf.gradients(psi, x)[0]
+        #     u_x = tape2.gradient(u, x)
+        #     u_y = tape2.gradient(u, y)
+        #     v_x = tape2.gradient(v, x)
+        #     v_y = tape2.gradient(v, y)
 
-        # u_x = tf.gradients(u, x)[0]
-        # u_y = tf.gradients(u, y)[0]
-        # u_xx = tf.gradients(u_x, x)[0]
-        # u_yy = tf.gradients(u_y, y)[0]
+        # u_xx = tape3.gradient(u_x, x)
+        # u_yy = tape3.gradient(u_y, y)
+        # v_xx = tape3.gradient(v_x, x)
+        # v_yy = tape3.gradient(v_y, y)
 
-        # v_x = tf.gradients(v, x)[0]
-        # v_y = tf.gradients(v, y)[0]
-        # v_xx = tf.gradients(v_x, x)[0]
-        # v_yy = tf.gradients(v_y, y)[0]
+        u = tf.gradients(psi, y)[0]
+        v = -tf.gradients(psi, x)[0]
 
-        # p_x = tf.gradients(p, x)[0]
-        # p_y = tf.gradients(p, y)[0]
+        u_x = tf.gradients(u, x)[0]
+        u_y = tf.gradients(u, y)[0]
+        u_xx = tf.gradients(u_x, x)[0]
+        u_yy = tf.gradients(u_y, y)[0]
+
+        v_x = tf.gradients(v, x)[0]
+        v_y = tf.gradients(v, y)[0]
+        v_xx = tf.gradients(v_x, x)[0]
+        v_yy = tf.gradients(v_y, y)[0]
+
+        p_x = tf.gradients(p, x)[0]
+        p_y = tf.gradients(p, y)[0]
 
         f_u = (u*u_x + v*u_y) + p_x - (u_xx + u_yy) / Re
         f_v = (u*v_x + v*v_y) + p_y - (v_xx + v_yy) / Re
