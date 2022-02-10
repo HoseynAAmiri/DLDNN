@@ -3,7 +3,7 @@ from DLD_env import DLD_env, Pillar
 from DLD_Utils import DLD_Utils as utl
 utl = utl()
 
-data = np.genfromtxt("Data.csv", delimiter=",")
+data = np.genfromtxt("psi_p.csv", delimiter=",")
 D = 20
 N = 10
 G_X = 40

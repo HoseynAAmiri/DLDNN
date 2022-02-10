@@ -51,12 +51,12 @@ def reflect(nn, wd, xp, yp, dp, up, vp):
     ny = interpgrid(ny, xp, yp)
     wall_distance = interpgrid(wd, xp, yp)
     
-    if (dp/2) < wall_distance:
+    if (dp/2) > wall_distance:
         if (up * nx + vp * ny) < 0:
             
             up = -(2*vp*nx*ny-up*(ny**2-nx**2))
             vp = -(2*up*nx*ny+vp*(ny**2-nx**2))
-         
+    
     return up, vp
 
 
