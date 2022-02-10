@@ -44,14 +44,13 @@ def streamplot(xy, uv, nn, wd, dp, start_point):
 # ========================
 
 def reflect(nn, wd, xp, yp, dp, up, vp):
+    
+    if (dp/2) > interpgrid(wd, xp, yp):
 
-    nx, ny = nn
-    
-    nx = interpgrid(nx, xp, yp)
-    ny = interpgrid(ny, xp, yp)
-    wall_distance = interpgrid(wd, xp, yp)
-    
-    if (dp/2) > wall_distance:
+        nx, ny = nn
+        nx = interpgrid(nx, xp, yp)
+        ny = interpgrid(ny, xp, yp)
+
         if (up * nx + vp * ny) < 0:
             
             up = -(2*vp*nx*ny-up*(ny**2-nx**2))
