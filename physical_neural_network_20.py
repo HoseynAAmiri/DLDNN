@@ -1,6 +1,8 @@
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import tensorflow as tf
+from tensorflow.python.framework.ops import disable_eager_execution
+disable_eager_execution()
 from tensorflow.keras import backend as K
 from tensorflow.keras.models import Model
 from tensorflow.keras import layers
@@ -35,6 +37,7 @@ class PINN:
         # set optimizer
         self.opt = keras.optimizers.Adam()
         
+        
         def pinn_loss_function(input):
         # Defining physics informed loss function
             def nested_loss(y_true, y_pred):
@@ -57,6 +60,7 @@ class PINN:
                 
         self.neural_net.compile(optimizer=self.opt, loss=pinn_loss_function(input))
     
+    
     def net_NS(self, NN_input, NN_output):
 
         x = NN_input[:, 0:1]
@@ -66,36 +70,36 @@ class PINN:
         psi = NN_output[:, 0:1]
         p = NN_output[:, 1:2]
 
-        u = K.gradients(psi, y)[0]
-        v = -K.gradients(psi, x)[0]
-        p_x = K.gradients(p, x)[0]
-        p_y = K.gradients(p, y)[0]
+        # u = K.gradients(psi, y)[0]
+        # v = K.gradients(-psi, x)[0]
+        # p_x = K.gradients(p, x)[0]
+        # p_y = K.gradients(p, y)[0]
 
-        u_x = K.gradients(u, x)[0]
-        u_y = K.gradients(u, y)[0]
-        v_x = K.gradients(v, x)[0]
-        v_y = K.gradients(v, y)[0]
+        # u_x = K.gradients(u, x)[0]
+        # u_y = K.gradients(u, y)[0]
+        # v_x = K.gradients(v, x)[0]
+        # v_y = K.gradients(v, y)[0]
 
-        u_xx = K.gradients(u_x, x)[0]
-        u_yy = K.gradients(u_y, y)[0]
-        v_xx = K.gradients(v_x, x)[0]
-        v_yy = K.gradients(v_y, y)[0]
+        # u_xx = K.gradients(u_x, x)[0]
+        # u_yy = K.gradients(u_y, y)[0]
+        # v_xx = K.gradients(v_x, x)[0]
+        # v_yy = K.gradients(v_y, y)[0]
 
-        # u = tf.gradients(psi, y)[0]
-        # v = -tf.gradients(psi, x)[0]
+        u = tf.gradients(psi, y)[0]
+        v = tf.gradients(-psi, x)[0]
 
-        # u_x = tf.gradients(u, x)[0]
-        # u_y = tf.gradients(u, y)[0]
-        # u_xx = tf.gradients(u_x, x)[0]
-        # u_yy = tf.gradients(u_y, y)[0]
+        u_x = tf.gradients(u, x)[0]
+        u_y = tf.gradients(u, y)[0]
+        u_xx = tf.gradients(u_x, x)[0]
+        u_yy = tf.gradients(u_y, y)[0]
 
-        # v_x = tf.gradients(v, x)[0]
-        # v_y = tf.gradients(v, y)[0]
-        # v_xx = tf.gradients(v_x, x)[0]
-        # v_yy = tf.gradients(v_y, y)[0]
+        v_x = tf.gradients(v, x)[0]
+        v_y = tf.gradients(v, y)[0]
+        v_xx = tf.gradients(v_x, x)[0]
+        v_yy = tf.gradients(v_y, y)[0]
 
-        # p_x = tf.gradients(p, x)[0]
-        # p_y = tf.gradients(p, y)[0]
+        p_x = tf.gradients(p, x)[0]
+        p_y = tf.gradients(p, y)[0]
 
         f_u = (u*u_x + v*u_y) + p_x - (u_xx + u_yy) / Re
         f_v = (u*v_x + v*v_y) + p_y - (v_xx + v_yy) / Re

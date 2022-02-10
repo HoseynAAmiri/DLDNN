@@ -6,7 +6,7 @@ from shapely.geometry.polygon import Polygon
 __all__ = ['streamplot']
 
 
-def streamplot(xy, uv, nn, pillars, dp, start_point):
+def streamplot(xy, uv, nn, wd, dp, start_point):
 
     x, y = xy
     u, v = uv
@@ -17,7 +17,7 @@ def streamplot(xy, uv, nn, pillars, dp, start_point):
     u = np.ma.masked_invalid(u)
     v = np.ma.masked_invalid(v)
 
-    integrate = get_integrator(u, v, dmap, nn, pillars, dp)
+    integrate = get_integrator(u, v, dmap, nn, wd, dp)
     sp = np.asanyarray(start_point, dtype=float).copy()
 
     xs = sp[0]
@@ -43,20 +43,20 @@ def streamplot(xy, uv, nn, pillars, dp, start_point):
 # Reflection definition
 # ========================
 
-def reflect(nn, pillars, xp, yp, dp, up, vp):
+def reflect(nn, wd, xp, yp, dp, up, vp):
 
     nx, ny = nn
     
     nx = interpgrid(nx, xp, yp)
     ny = interpgrid(ny, xp, yp)
+    wall_distance = interpgrid(wd, xp, yp)
     
-    for pillar in pillars:
-        if pillar.buffer(1.1*dp/2).contains(Point((xp/100, yp/100))):
-            if (up * nx + vp * ny) < 0:
-                
-                up = -(2*vp*nx*ny-up*(ny**2-nx**2))
-                vp = -(2*up*nx*ny+vp*(ny**2-nx**2))
-    print(xp, yp)            
+    if (dp/2) < wall_distance:
+        if (up * nx + vp * ny) < 0:
+            
+            up = -(2*vp*nx*ny-up*(ny**2-nx**2))
+            vp = -(2*up*nx*ny+vp*(ny**2-nx**2))
+         
     return up, vp
 
 
@@ -145,7 +145,7 @@ class TerminateTrajectory(Exception):
 # Integrator definitions
 # =======================
 
-def get_integrator(u, v, dmap, nn, pillars, dp):
+def get_integrator(u, v, dmap, nn, wd, dp):
 
     # rescale velocity onto grid-coordinates for integrations.
     u, v = dmap.data2grid(u, v)
@@ -165,7 +165,7 @@ def get_integrator(u, v, dmap, nn, pillars, dp):
         ui = interpgrid(u, xi, yi)
         vi = interpgrid(v, xi, yi)
 
-        ui, vi = reflect(nn, pillars, xi, yi, dp, ui, vi)
+        ui, vi = reflect(nn, wd, xi, yi, dp, ui, vi)
         return ui * dt_ds, vi * dt_ds
 
     def integrate(x0, y0):

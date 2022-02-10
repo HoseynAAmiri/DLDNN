@@ -10,13 +10,13 @@ from DLD_Utils import DLD_Utils as utl
 utl=utl()
 
 class DLD_env:
-    def __init__(self, pillar, Re, resolution=(100, 100)):
+    def __init__(self, pillar, Re, resolution=(128, 128)):
 
         self.pillar = pillar
         self.Re = Re    
         self.resolution = resolution
         self.x_grid, self.y_grid, self.dx, self.dy = self.grid()
-        self.wd = self.wall_distance(plot=False)
+        self.wd = self.wall_distance()
     # the grid configuration for this modeling is set in this function 
     def grid(self, grid_size=None):
 
@@ -36,7 +36,7 @@ class DLD_env:
         return x_grid, y_grid, dx, dy
     # Wall distance is function which  measures the minimum distance between each point in the grid 
     # from points on pillars
-    def wall_distance(self, plot=True):
+    def wall_distance(self, plot=False):
 
         X = np.array([])
         Y = np.array([])
@@ -85,7 +85,7 @@ class DLD_env:
 
         return wall_distance
     # this function simulate the particle trajectory by having domain shape, particle size and velocity fields
-    def simulate_particle(self, dp, uv, pillars, start_point, periods=1, plot=False, figsize=(9, 4)):
+    def simulate_particle(self, dp, uv, start_point, periods=1, plot=False, figsize=(9, 4)):
 
         
         nx, ny = utl.gradient(self.wd, self.dx, self.dy, recover=True)
@@ -96,7 +96,7 @@ class DLD_env:
 
         stream = []
         for i in range(periods):
-            stream.append(ptj.streamplot((self.x_grid, self.y_grid), uv, (nx, ny), pillars, dp, start_point))
+            stream.append(ptj.streamplot((self.x_grid, self.y_grid), uv, (nx, ny), self.wd, dp, start_point))
 
             if stream[i][-1, 0] >= 0.99:
                 start_point = stream[i][-1, :] - [1, 0]
@@ -118,7 +118,7 @@ class DLD_env:
             plt.ylim([0, 1])
 
             ax = plt.gca()
-            for pillar in pillars:
+            for pillar in self.pillar.pillars:
                 ax.add_patch(PolygonPatch(pillar, fc='red'))
                 ax.add_patch(PolygonPatch(pillar.buffer(
                     dp/2).difference(pillar), fc='white', ec='#999999'))

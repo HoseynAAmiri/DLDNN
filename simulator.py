@@ -32,11 +32,11 @@ if compare:
 
 v, u = utl.gradient(psi_interp, -dld.dx, dld.dy)
 
-'''
+
 x0 = 0
 y0 = 30/(D+G_X)
 point0 = np.array([x0, y0])
 periods = 20
 d_particle = 10/(D+G_X)
-stream = dld.simulate_particle(d_particle, (u, v), pillar.pillars, point0, periods=periods, plot=True)
-'''
+stream = dld.simulate_particle(d_particle, (u, v), point0, periods=periods, plot=True)
+
