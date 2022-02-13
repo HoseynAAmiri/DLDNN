@@ -1,8 +1,9 @@
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import tensorflow as tf
-from tensorflow.python.framework.ops import disable_eager_execution
-disable_eager_execution()
+# from tensorflow.python.framework.ops import disable_eager_execution
+# disable_eager_execution()
+from keras.utils.vis_utils import plot_model
 from tensorflow.keras import backend as K
 from tensorflow.keras.models import Model
 from tensorflow.keras import layers
@@ -12,17 +13,13 @@ import numpy as np
 from DLD_Utils import DLD_Utils as utl
 utl=utl()
 
-from tensorflow.python.framework.ops import disable_eager_execution
-disable_eager_execution()
-
-
 class PINN:
     def __init__(self, input_shape, output_shape, hidden_layers, summary=False):
         self.create_model(input_shape, output_shape, hidden_layers, summary=summary)
-    @tf.function
     def create_model(self, input_shape, output_shape, hidden_layers, summary=False):
-           
+
         input = layers.Input(shape=input_shape, name = "Network_Input")
+
         output_true = layers.Input(shape=output_shape, name="true_output")
 
         for i, layer in enumerate(hidden_layers):
@@ -34,8 +31,17 @@ class PINN:
                 X = layers.Dropout(0.2)(X)
 
         output = layers.Dense(output_shape, activation='linear')(X)
-        self.neural_net = Model(inputs=[input,output_true], outputs=output, name="neural_net")
+        
+        def grad(y, x):
+            X = [y,x]
+            return layers.Lambda(lambda x: tf.gradients(x[0], unconnected_gradients='zero')[0])(X) 
+        
+        u = grad(output[:,0], input[:,1])
+        v = grad(-output[:,0], input[:,0])
 
+        self.neural_net = Model(inputs=[input,output_true], outputs=[output, u, v], name="neural_net")
+        plot_model(self.neural_net, to_file='model_plot1.png', show_shapes=True, show_layer_names=True)
+        
         if summary:
             self.neural_net.summary()
         # set optimizer
@@ -81,24 +87,6 @@ class PINN:
 
         psi = NN_output[:, 0:1]
         p = NN_output[:, 1:2] 
-        # with tf.GradientTape() as tape3:
-        #     with tf.GradientTape() as tape2:
-        #         with tf.GradientTape() as tape1:
-
-        # u = K.gradients(psi, y)[0]
-        # v = K.gradients(-psi, x)[0]
-        # p_x = K.gradients(p, x)[0]
-        # p_y = K.gradients(p, y)[0]
-
-        # u_x = K.gradients(u, x)[0]
-        # u_y = K.gradients(u, y)[0]
-        # v_x = K.gradients(v, x)[0]
-        # v_y = K.gradients(v, y)[0]
-
-        # u_xx = K.gradients(u_x, x)[0]
-        # u_yy = K.gradients(u_y, y)[0]
-        # v_xx = K.gradients(v_x, x)[0]
-        # v_yy = K.gradients(v_y, y)[0]
 
         u = tf.gradients(psi, y)[0]
         v = tf.gradients(-psi, x)[0]
