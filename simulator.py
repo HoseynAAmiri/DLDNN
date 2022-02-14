@@ -9,7 +9,7 @@ N = 10
 G_X = 40
 G_R = 1
 Re = 1
-grid_size =(128, 128)
+grid_size = (128, 128)
 
 pillar = Pillar(D, N, G_X, G_R)
 dld = DLD_env(pillar, Re, resolution=grid_size)
