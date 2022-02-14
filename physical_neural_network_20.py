@@ -10,7 +10,6 @@ from tensorflow.keras import Model
 import tensorflow.keras.backend as K
 import tensorflow as tf 
 from keras.utils.vis_utils import plot_model
-
 import tensorflow.keras as keras
 from time import strftime
 
@@ -25,7 +24,7 @@ class PINN:
         
         # Define gradient function
         def grad(y, x, nameit):    
-            return Lambda(lambda z: tf.gradients(z[0], z[1], unconnected_gradients='zero')[0], name=nameit)([y,x]) 
+            return Lambda(lambda z: tf.gradients(z[0], z[1], unconnected_gradients='zero')[0], name=nameit)([y, x]) 
         
         # define network 
         def network_func(input, hidden_layers): 
@@ -39,16 +38,16 @@ class PINN:
             output = Dense(output_shape, activation='relu')(X)
             return output
         
-        input = Input(shape=(input_shape,), name = "Network_Input")
+        input = Input(shape=input_shape, name="Network_Input")
 
         output = network_func(input, hidden_layers)
 
-        x = Lambda(lambda z: z[:,0], name='x')(input)
-        y = Lambda(lambda z: z[:,1], name='y')(input)
-        Re = Lambda(lambda z: z[:,5], name='Re')(input)
-        
-        psi = Lambda(lambda z: z[:,0], name='psi')(output)
-        p = Lambda(lambda z: z[:,1], name='p')(output)
+        x = Lambda(lambda z: z[:, 0], name='x')(input)
+        y = Lambda(lambda z: z[:, 1], name='y')(input)
+        Re = Lambda(lambda z: z[:, 5], name='Re')(input)
+
+        psi = Lambda(lambda z: z[:, 0], name='psi')(output)
+        p = Lambda(lambda z: z[:, 1], name='p')(output)
 
         u = grad(psi, y,'u')
         v = grad(-psi, x,'v')
@@ -66,22 +65,21 @@ class PINN:
         p_x = grad(p, x, 'p_x')
         p_y = grad(p, y, 'p_y')
         
-        
         def NS_func(z, nameit):
-            #f_u = (u*u_x + v*u_y) + p_x - (u_xx + u_yy) / Re
-            #f_v = (u*v_x + v*v_y) + p_y - (v_xx + v_yy) / Re   
-            return Lambda(lambda z:((z[0]*z[1]+z[2]*z[3])+z[4]-(z[5]+z[6]))/z[7], output_shape=[1], name=nameit)(z) 
+            # f_u = (u*u_x + v*u_y) + p_x - (u_xx + u_yy) / Re
+            # f_v = (u*v_x + v*v_y) + p_y - (v_xx + v_yy) / Re   
+            return Lambda(lambda z: ((z[0]*z[1]+z[2]*z[3])+z[4]-(z[5]+z[6]))/z[7], output_shape=[1], name=nameit)(z) 
         
         f_u = NS_func([u, u_x, v, u_y, p_x, u_xx, u_yy, Re], 'f_u')
         f_v = NS_func([u, v_x, v, v_y, p_y, v_xx, v_yy, Re], 'f_v')
         continuity = Add()([u_x, v_y])
 
-        self.neural_net = Model(inputs=input, outputs=[psi, p, f_u, f_v, continuity], name="neural_net")
-        
+        self.neural_net = Model(inputs=input, outputs=np.concatenate([psi, p, f_u, f_v, continuity], 1), name="neural_net")
         
         if summary:
             self.neural_net.summary()
-            plot_model(self.neural_net, to_file='PINN_plot.png', show_shapes=True, show_layer_names=True)
+            # plot_model(self.neural_net, to_file='PINN_plot.png', show_shapes=True, show_layer_names=True)
+        
         # set optimizer
         self.opt = keras.optimizers.Adam()           
         self.neural_net.compile(optimizer=self.opt, loss='mse')
@@ -110,7 +108,7 @@ if __name__ == "__main__":
     epoch = 10
     batch_size = 32
     hidden_layers = [20, 20, 20, 20, 20, 20, 20, 20, 20, 20]
-
+    
     # Load Data
     dataset = utl.load_data('dataset')
 
@@ -164,11 +162,13 @@ if __name__ == "__main__":
 
     s_train = s[train_idx, :]
     p_train = p[train_idx, :]
-    # constraint
+    
+    # constraints
     c_train = np.zeros_like(s_train)
 
     X_nn_train = np.concatenate([x_train, y_train, d_train, n_train, g_train, r_train], 1)
     y_nn_train = np.concatenate([s_train, p_train, c_train, c_train, c_train], 1)
+    
     # Test Data
     test_idx = np.setdiff1d(np.arange(N * N * L), train_idx)
     
@@ -189,13 +189,13 @@ if __name__ == "__main__":
     y_nn_test = np.concatenate([s_test, p_test, c_test, c_test, c_test], 1)
     
     # Training
-    print(X_nn_train.shape[1])
-    model = PINN(X_nn_train.shape[1], y_nn_train.shape[1], hidden_layers, summary=True)
     
+    model = PINN(X_nn_train.shape[1], y_nn_train.shape[1], hidden_layers, summary=False)
     print(model.neural_net.predict([[0, 0, 0, 0, 0, 0]]))
 
     # model.train(X_nn_train, y_nn_train, X_nn_test, y_nn_test, epoch, batch_size)
-    # saving
+
+    # # saving
     # model.save(f'models/PINN_{strftime("%Y-%m-%d_%H-%M-%S")}.model')
 
     
