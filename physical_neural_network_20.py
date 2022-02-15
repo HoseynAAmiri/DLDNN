@@ -12,7 +12,7 @@ import tensorflow as tf
 from keras.utils.vis_utils import plot_model
 import tensorflow.keras as keras
 from time import strftime
-
+import matplotlib.pyplot as plt
 from DLD_Utils import DLD_Utils as utl
 utl=utl()
 
@@ -26,7 +26,8 @@ class PINN:
         def grad(y, x, nameit):    
             return Lambda(lambda z: tf.gradients(z[0], z[1], unconnected_gradients='zero')[0], name=nameit)([y, x]) 
         
-        # define network 
+        # define network
+        #initializer = tf.keras.initializers.GlorotUniform()# , kernel_initializer=initializer
         def network_func(input, hidden_layers): 
             for i, layer in enumerate(hidden_layers):
                 if i==0:
@@ -35,19 +36,19 @@ class PINN:
                 else:
                     X = Dense(layer, activation="relu")(X)
                     #X = layers.Dropout(0.2)(X)
-            output = Dense(output_shape, activation='relu')(X)
+            output = Dense(output_shape, activation='linear')(X)
             return output
         
         input = Input(shape=input_shape, name="Network_Input")
 
         output = network_func(input, hidden_layers)
 
-        x = Lambda(lambda z: z[:, 0], name='x')(input)
-        y = Lambda(lambda z: z[:, 1], name='y')(input)
-        Re = Lambda(lambda z: z[:, 5], name='Re')(input)
+        x = Lambda(lambda z: z[:, 0:1], name='x')(input)
+        y = Lambda(lambda z: z[:, 1:2], name='y')(input)
+        Re = Lambda(lambda z: z[:, 5:6], name='Re')(input)
 
-        psi = Lambda(lambda z: z[:, 0], name='psi')(output)
-        p = Lambda(lambda z: z[:, 1], name='p')(output)
+        psi = Lambda(lambda z: z[:, 0:1], name='psi')(output)
+        p = Lambda(lambda z: z[:, 1:2], name='p')(output)
 
         u = grad(psi, y,'u')
         v = grad(-psi, x,'v')
@@ -72,21 +73,24 @@ class PINN:
         
         f_u = NS_func([u, u_x, v, u_y, p_x, u_xx, u_yy, Re], 'f_u')
         f_v = NS_func([u, v_x, v, v_y, p_y, v_xx, v_yy, Re], 'f_v')
-        continuity = Add()([u_x, v_y])
+        continuity = Add(name='continuity')([u_x, v_y])
 
-        self.neural_net = Model(inputs=input, outputs=np.concatenate([psi, p, f_u, f_v, continuity], 1), name="neural_net")
+        self.neural_net = Model(inputs=input, outputs=[psi, p], name="neural_net")
         
         if summary:
             self.neural_net.summary()
-            # plot_model(self.neural_net, to_file='PINN_plot.png', show_shapes=True, show_layer_names=True)
+            plot_model(self.neural_net, to_file='PINN_plot.png', show_shapes=True, show_layer_names=True)
         
         # set optimizer
-        self.opt = keras.optimizers.Adam()           
-        self.neural_net.compile(optimizer=self.opt, loss='mse')
+        self.opt = keras.optimizers.Adam()
+        mse = keras.losses.MeanSquaredError()           
+        losses = {"psi":mse, "p":mse}
+        #, , "f_u":mse, "f_v":mse, "continuity":mse
+        self.neural_net.compile(optimizer=self.opt, loss=losses)
     
     
     def train(self, x_train, y_train, x_test, y_test, epoch, batch_size):
-         # Stroing training logs
+        # Stroing training logs
         history = self.neural_net.fit(
             x=x_train,
             y=y_train,
@@ -94,20 +98,26 @@ class PINN:
             batch_size=batch_size,
             shuffle=True,
             validation_data=(x_test, y_test))
+        
+        plt.figure()
+        plt.plot(history.history['loss'])
+        plt.plot(history.history['val_loss'])
+        plt.title('model loss')
+        plt.ylabel('loss')
+        plt.xlabel('epoch')
+        plt.yscale('log')
+        plt.legend(['train', 'test'], loc='upper left')
+        plt.show()
     
         return history.history
-        
-    # def callback(self, loss_psi, loss_p, loss_f_u, loss_f_v):
-    #     print('loss_psi: %.3e, loss_p: %.3e, loss_f_u: %.3e, loss_f_v: %.3e' %
-    #           (loss_psi, loss_p, loss_f_u, loss_f_v))
-            
+           
 
 if __name__ == "__main__":
 
-    N_train = 100_000
-    epoch = 10
+    N_train = 500_000
+    epoch =  10
     batch_size = 32
-    hidden_layers = [20, 20, 20, 20, 20, 20, 20, 20, 20, 20]
+    hidden_layers = 10*[128]
     
     # Load Data
     dataset = utl.load_data('dataset')
@@ -140,12 +150,19 @@ if __name__ == "__main__":
 
     d = DD.flatten()[:, None]  # N2L x 1
     n = NN.flatten()[:, None]  # N2L x 1
-    g = PP.flatten()[:, None]  # N2L x 1
+    g = GG.flatten()[:, None]  # N2L x 1
     r = RR.flatten()[:, None]  # N2L x 1
 
     s = SS.flatten()[:, None]  # N2L x 1
     p = PP.flatten()[:, None]  # N2L x 1
-
+    
+    dn = d/np.max(np.abs(d))
+    nn = n/np.max(np.abs(n))
+    gn = g/np.max(np.abs(g))
+    rn = r/np.max(np.abs(r))
+    
+    sn = s/np.max(np.abs(s))
+    pn = p/np.max(np.abs(p))
     ######################################################################
     ######################## Noiseles Data ###############################
     ######################################################################
@@ -155,47 +172,53 @@ if __name__ == "__main__":
     x_train = x[train_idx, :]
     y_train = y[train_idx, :]
 
-    d_train = d[train_idx, :]
-    n_train = n[train_idx, :]
-    g_train = g[train_idx, :]
-    r_train = r[train_idx, :]
+    d_train = dn[train_idx, :]
+    n_train = nn[train_idx, :]
+    g_train = gn[train_idx, :]
+    r_train = rn[train_idx, :]
 
-    s_train = s[train_idx, :]
-    p_train = p[train_idx, :]
+    s_train = sn[train_idx, :]
+    p_train = pn[train_idx, :]
     
     # constraints
     c_train = np.zeros_like(s_train)
 
     X_nn_train = np.concatenate([x_train, y_train, d_train, n_train, g_train, r_train], 1)
-    y_nn_train = np.concatenate([s_train, p_train, c_train, c_train, c_train], 1)
+    # y_nn_train = np.concatenate([s_train, p_train, c_train, c_train, c_train], 1)
+    y_nn_train = [s_train, p_train]
+    
     
     # Test Data
-    test_idx = np.setdiff1d(np.arange(N * N * L), train_idx)
+    test_idx = np.setdiff1d(np.arange(N * N * L), train_idx)[0:1000]
     
     x_test = x[test_idx, :]
     y_test = y[test_idx, :]
     
-    d_test = d[test_idx, :]
-    n_test = n[test_idx, :]
-    g_test = g[test_idx, :]
-    r_test = r[test_idx, :]
+    d_test = dn[test_idx, :]
+    n_test = nn[test_idx, :]
+    g_test = gn[test_idx, :]
+    r_test = rn[test_idx, :]
 
-    s_test = s[test_idx, :]
-    p_test = p[test_idx, :]
+    s_test = sn[test_idx, :]
+    p_test = pn[test_idx, :]
     
     c_test = np.zeros_like(s_test)
 
     X_nn_test = np.concatenate([x_test, y_test, d_test, n_test, g_test, r_test], 1)
-    y_nn_test = np.concatenate([s_test, p_test, c_test, c_test, c_test], 1)
+    # y_nn_test = np.concatenate([s_test, p_test, c_test, c_test, c_test], 1)
+    y_nn_test = [s_test, p_test]
     
+ 
     # Training
+    # model = PINN(X_nn_train.shape[1], y_nn_train.shape[1], hidden_layers, summary=False)
+    model = PINN(6, 2, hidden_layers, summary=True)
     
-    model = PINN(X_nn_train.shape[1], y_nn_train.shape[1], hidden_layers, summary=False)
-    print(model.neural_net.predict([[0, 0, 0, 0, 0, 0]]))
-
-    # model.train(X_nn_train, y_nn_train, X_nn_test, y_nn_test, epoch, batch_size)
-
-    # # saving
-    # model.save(f'models/PINN_{strftime("%Y-%m-%d_%H-%M-%S")}.model')
-
+    Before = model.neural_net.get_weights()
+    model.train(X_nn_train, y_nn_train, X_nn_test, y_nn_test, epoch, batch_size)
+    after = model.neural_net.get_weights()
+    
+    # saving
+    model.neural_net.save(f'models/PINN_{strftime("%Y-%m-%d_%H-%M-%S")}.model')
+    
+    # A = model.neural_net.predict(X_norm_train[0:20])
     
