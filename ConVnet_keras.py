@@ -264,7 +264,7 @@ class ConvNet():
             self.autoencoder_py.summary()
 
         ##########################################################
-        #        main fully connected neural network             #
+        #        Main-fully connected neural network             #
         ##########################################################
 
         FCNN_input = layers.Input(shape = input_shape_label,  name="labels")
@@ -304,19 +304,22 @@ class ConvNet():
       
       
         self.FCNN = Model(inputs=FCNN_input,
-        outputs=[FCNN_output_psi, FCNN_output_px, FCNN_output_px],
+        outputs=[FCNN_output_psi, FCNN_output_px, FCNN_output_py],
         name="FCNN")
 
         if summary:
             self.FCNN.summary()
 
-        [encoded_img_psi, encoded_img_px, encoded_img_py]  = self.FCNN(FCNN_input)
+        [encoded_img_psi, encoded_img_px, encoded_img_py] = self.FCNN(FCNN_input)
         decoded_img_psi = self.decoder_psi(encoded_img_psi)
         decoded_img_px = self.decoder_px(encoded_img_px)
         decoded_img_py = self.decoder_py(encoded_img_py)
 
         self.DLDNN = Model(inputs=FCNN_input,
         outputs=[decoded_img_psi, decoded_img_px, decoded_img_py], name="DLDNN")
+
+        # Apply physics informed Loss to the DLDNN model 
+        decoded_img_psi
 
         if summary:
             plot_model(self.DLDNN, to_file='DLDNN_PINN_plot.png', show_shapes=True, show_layer_names=True)
