@@ -125,32 +125,34 @@ def compile_data(grid_size):
             p_interp = utl.interp2grid(x_mapped, y_mapped, data[:, 3],
                                        x_grid, y_grid, recover=True)
 
+            px, py = utl.gradient(p_interp, dx, dy)
+            px = utl.insert_mask(px, (x_grid, y_grid), )
 
             # Make dataset
             dataset_psi.append(psi_interp)
-            dataset_px.append(px_interp)
-            dataset_py.append(py_interp)
+            dataset_px.append(px)
+            dataset_py.append(py)
 
             time.sleep(0.1)
 
     return (np.array(dataset_psi), np.array(dataset_px), np.array(dataset_py), np.array(labels))
 
+if __name__ == "__main__":
+    '''
+    D = [10, 15, 20, 25, 30, 35, 40, 45, 50]
+    N = [3, 4, 5, 6, 7, 8, 9, 10]
+    G = [10, 15, 20, 25, 30, 35, 40, 45, 50]
+    Re = [0.01, 0.1, 0.2, 0.4, 0.8, 1, 2, 4, 6, 8, 10, 15, 20, 25, 30]
+    '''
 
-'''
-D = [10, 15, 20, 25, 30, 35, 40, 45, 50]
-N = [3, 4, 5, 6, 7, 8, 9, 10]
-G = [10, 15, 20, 25, 30, 35, 40, 45, 50]
-Re = [0.01, 0.1, 0.2, 0.4, 0.8, 1, 2, 4, 6, 8, 10, 15, 20, 25, 30]
-'''
+    D = [10, 20, 30, 40, 50]
+    N = [3, 5, 7, 9]
+    G = [10, 20, 30, 40, 50]
+    RE = [0.01, 0.1, 0.2, 0.4, 0.8, 1]
 
-D = [10, 20, 30, 40, 50]
-N = [3, 5, 7, 9]
-G = [10, 20, 30, 40, 50]
-RE = [0.01, 0.1, 0.2, 0.4, 0.8, 1]
+    grid_size = (128, 128)
 
-grid_size = (128, 128)
+    generate_data('DLD_COMSOL.mph', D, N, G, RE)
 
-generate_data('DLD_COMSOL.mph', D, N, G, RE)
-
-dataset = compile_data(grid_size)
-utl.save_data(dataset, 'dataset')
+    dataset = compile_data(grid_size)
+    utl.save_data(dataset, 'dataset')
