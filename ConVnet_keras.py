@@ -164,7 +164,7 @@ class ConvNet():
         encoder_input_px = layers.Input(
             shape=(input_shape_field[0], input_shape_field[1], 1), name="original_img_px")
         X = layers.Conv2D(16, (3, 3), activation="relu",
-                          padding="same")(encoder_input_p)        
+                          padding="same")(encoder_input_px)        
         X = layers.MaxPooling2D((2, 2), padding="same")(X)
         
         X = layers.Conv2D(16, (3, 3), activation="relu",
@@ -247,7 +247,7 @@ class ConvNet():
         decoder_output_py = layers.Conv2D(
             1, (3, 3), activation="linear", padding="same")(X)
 
-        self.decoder_p = Model(
+        self.decoder_py = Model(
             decoder_input_py, decoder_output_py, name="decoder_Py")
         if summary:
             self.decoder_py.summary()
@@ -329,7 +329,8 @@ class ConvNet():
 
     def compile_models(self):
         self.autoencoder_psi.compile(optimizer=self.opt, loss= self.auteloss)
-        self.autoencoder_p.compile(optimizer=self.opt, loss= self.auteloss)
+        self.autoencoder_px.compile(optimizer=self.opt, loss= self.auteloss)
+        self.autoencoder_py.compile(optimizer=self.opt, loss= self.auteloss)
         self.DLDNN.compile(optimizer=self.opt, loss=[self.dldnnloss, self.dldnnloss])
 
     def train_AutoE_psi(self, train_data, test_data, epoch, batch_size=128):
@@ -448,8 +449,8 @@ def network_train(epoch_AutoE=10, batch_size_AutoE=32, epoch_DLDNN=10,
     label_size = Data_train[2][0].shape
     
     # Create the Neural networks
-    NN.create_model(grid_size, label_size, auteloss="mse",
-                    dldnnloss="mse", summary=False)
+    NN.create_model(grid_size, label_size, summary=True, auteloss="mse",
+                    dldnnloss="mse")
     
     # Train the Autoencoders
     if AutoE_psi_train:
@@ -469,8 +470,8 @@ def network_train(epoch_AutoE=10, batch_size_AutoE=32, epoch_DLDNN=10,
     
     #load the autoencoder weight for transfer learning 
     NN.autoencoder_psi.load_weights('model_autoencoder_psi.h5')
-    NN.autoencoder_p.load_weights('model_autoencoder_px.h5')
-    NN.autoencoder_p.load_weights('model_autoencoder_py.h5')
+    NN.autoencoder_px.load_weights('model_autoencoder_px.h5')
+    NN.autoencoder_py.load_weights('model_autoencoder_py.h5')
     # freeze the decoder's weights
     #NN.decoder_psi.trainable = False
     #NN.decoder_p.trainable = False
@@ -524,8 +525,7 @@ batch_size_AutoE = 32
 epoch_DLDNN = 20
 batch_size_DLDNN = 32
 network_train(epoch_AutoE, batch_size_AutoE, epoch_DLDNN, batch_size_DLDNN,
- AutoE_psi_train=False, AutoE_px_train=False, AutoE_py_train=False, DLDNN_train=False 
-)
+AutoE_psi_train=False, AutoE_px_train=False, AutoE_py_train=False, DLDNN_train=False)
 
 D = 20
 N = 5
