@@ -158,11 +158,11 @@ class ConvNet():
             self.autoencoder_psi.summary()
 
         ##########################################################
-        #                    p autoencoder                       #
+        #                   p_x autoencoder                      #
         ##########################################################
          
-        encoder_input_p = layers.Input(
-            shape=(input_shape_field[0], input_shape_field[1], 1), name="original_img_p")
+        encoder_input_px = layers.Input(
+            shape=(input_shape_field[0], input_shape_field[1], 1), name="original_img_px")
         X = layers.Conv2D(16, (3, 3), activation="relu",
                           padding="same")(encoder_input_p)        
         X = layers.MaxPooling2D((2, 2), padding="same")(X)
@@ -172,17 +172,17 @@ class ConvNet():
         X = layers.MaxPooling2D((2, 2), padding="same")(X)
 
         X = layers.Conv2D(16, (3, 3), activation="relu", padding="same")(X)
-        encoder_output_p = layers.MaxPooling2D((2, 2), padding="same")(X)
-        self.encoder_p = Model(
-            encoder_input_p, encoder_output_p, name="encoder_p")
+        encoder_output_px = layers.MaxPooling2D((2, 2), padding="same")(X)
+        self.encoder_px = Model(
+            encoder_input_px, encoder_output_px, name="encoder_px")
 
         if summary:
-            self.encoder_p.summary()
+            self.encoder_px.summary()
         # Decoder
-        decoder_input_p = layers.Input(shape=(16, 16, 16), name="encoded_img_p")
+        decoder_input_px = layers.Input(shape=(16, 16, 16), name="encoded_img_px")
         X = layers.Conv2DTranspose(
             16, (3, 3), strides=2, activation="relu",
-            padding="same")(decoder_input_p)
+            padding="same")(decoder_input_px)
                 
         X = layers.Conv2DTranspose(
             16, (3, 3),strides=2, activation="relu",
@@ -191,24 +191,77 @@ class ConvNet():
         X = layers.Conv2DTranspose(
             16, (3, 3),strides=2, activation="relu",
             padding="same")(X)                  
-        decoder_output_p = layers.Conv2D(
+        decoder_output_px = layers.Conv2D(
+            1, (3, 3), activation="linear", padding="same")(X)
+
+        self.decoder_px = Model(
+            decoder_input_px, decoder_output_px, name="decoder_Px")
+        if summary:
+            self.decoder_px.summary()
+
+        # Autoencoder
+        autoencoder_input_px = layers.Input(
+            shape=(input_shape_field[0], input_shape_field[1], 1), name="img_px")
+        encoded_img_px = self.encoder_px(autoencoder_input_px)
+        decoded_img_px = self.decoder_px(encoded_img_px)
+        self.autoencoder_px = Model(
+            autoencoder_input_px, decoded_img_px, name="autoencoder_px")
+
+        if summary:
+            self.autoencoder_px.summary()
+        
+        ##########################################################
+        #                    py autoencoder                       #
+        ##########################################################
+         
+        encoder_input_py = layers.Input(
+            shape=(input_shape_field[0], input_shape_field[1], 1), name="original_img_py")
+        X = layers.Conv2D(16, (3, 3), activation="relu",
+                          padding="same")(encoder_input_py)        
+        X = layers.MaxPooling2D((2, 2), padding="same")(X)
+        
+        X = layers.Conv2D(16, (3, 3), activation="relu",
+                          padding="same")(X)
+        X = layers.MaxPooling2D((2, 2), padding="same")(X)
+
+        X = layers.Conv2D(16, (3, 3), activation="relu", padding="same")(X)
+        encoder_output_py = layers.MaxPooling2D((2, 2), padding="same")(X)
+        self.encoder_py = Model(
+            encoder_input_py, encoder_output_py, name="encoder_py")
+
+        if summary:
+            self.encoder_py.summary()
+        # Decoder
+        decoder_input_py = layers.Input(shape=(16, 16, 16), name="encoded_img_py")
+        X = layers.Conv2DTranspose(
+            16, (3, 3), strides=2, activation="relu",
+            padding="same")(decoder_input_py)
+                
+        X = layers.Conv2DTranspose(
+            16, (3, 3),strides=2, activation="relu",
+            padding="same")(X)
+        
+        X = layers.Conv2DTranspose(
+            16, (3, 3),strides=2, activation="relu",
+            padding="same")(X)                  
+        decoder_output_py = layers.Conv2D(
             1, (3, 3), activation="linear", padding="same")(X)
 
         self.decoder_p = Model(
-            decoder_input_p, decoder_output_p, name="decoder_P")
+            decoder_input_py, decoder_output_py, name="decoder_Py")
         if summary:
-            self.decoder_p.summary()
+            self.decoder_py.summary()
 
         # Autoencoder
-        autoencoder_input_p = layers.Input(
-            shape=(input_shape_field[0], input_shape_field[1], 1), name="img_p")
-        encoded_img_p = self.encoder_p(autoencoder_input_p)
-        decoded_img_p = self.decoder_p(encoded_img_p)
-        self.autoencoder_p = Model(
-            autoencoder_input_p, decoded_img_p, name="autoencoder_p")
+        autoencoder_input_py = layers.Input(
+            shape=(input_shape_field[0], input_shape_field[1], 1), name="img_py")
+        encoded_img_py = self.encoder_py(autoencoder_input_py)
+        decoded_img_py = self.decoder_py(encoded_img_py)
+        self.autoencoder_py = Model(
+            autoencoder_input_py, decoded_img_py, name="autoencoder_py")
 
         if summary:
-            self.autoencoder_p.summary()
+            self.autoencoder_py.summary()
 
         ##########################################################
         #        main fully connected neural network             #
@@ -227,7 +280,7 @@ class ConvNet():
         X = layers.Dropout(0.2)(X)
         FCNN_output_psi = layers.Reshape((16, 16, 16))(X)
 
-        # p branch 
+        # px branch 
         X = layers.Dense(64, activation="relu")(FCNN_input)
         X = layers.Dropout(0.2)(X)
         X = layers.Dense(512, activation="relu")(X)
@@ -236,16 +289,34 @@ class ConvNet():
         X = layers.Dropout(0.2)(X)
         X = layers.Dense(4096, activation="linear")(X)
         X = layers.Dropout(0.2)(X)
-        FCNN_output_p = layers.Reshape((16, 16, 16))(X)
+        FCNN_output_px = layers.Reshape((16, 16, 16))(X)
+
+        # py branch 
+        X = layers.Dense(64, activation="relu")(FCNN_input)
+        X = layers.Dropout(0.2)(X)
+        X = layers.Dense(512, activation="relu")(X)
+        X = layers.Dropout(0.2)(X)
+        X = layers.Dense(2048, activation="relu")(X)
+        X = layers.Dropout(0.2)(X)
+        X = layers.Dense(4096, activation="linear")(X)
+        X = layers.Dropout(0.2)(X)
+        FCNN_output_py = layers.Reshape((16, 16, 16))(X)
       
-        self.FCNN = Model(inputs=FCNN_input, outputs=[FCNN_output_psi, FCNN_output_p], name="FCNN")
+      
+        self.FCNN = Model(inputs=FCNN_input,
+        outputs=[FCNN_output_psi, FCNN_output_px, FCNN_output_px],
+        name="FCNN")
+
         if summary:
             self.FCNN.summary()
 
-        [encoded_img_psi, encoded_img_p]  = self.FCNN(FCNN_input)
+        [encoded_img_psi, encoded_img_px, encoded_img_py]  = self.FCNN(FCNN_input)
         decoded_img_psi = self.decoder_psi(encoded_img_psi)
-        decoded_img_p = self.decoder_p(encoded_img_p)
-        self.DLDNN = Model(inputs=FCNN_input, outputs=[decoded_img_psi, decoded_img_p], name="DLDNN")
+        decoded_img_px = self.decoder_px(encoded_img_px)
+        decoded_img_py = self.decoder_py(encoded_img_py)
+
+        self.DLDNN = Model(inputs=FCNN_input,
+        outputs=[decoded_img_psi, decoded_img_px, decoded_img_py], name="DLDNN")
 
         if summary:
             plot_model(self.DLDNN, to_file='DLDNN_PINN_plot.png', show_shapes=True, show_layer_names=True)
@@ -284,9 +355,31 @@ class ConvNet():
 
         return history.history
 
-    def train_AutoE_p(self, train_data, test_data, epoch, batch_size):
+    def train_AutoE_px(self, train_data, test_data, epoch, batch_size):
 
-        history = self.autoencoder_p.fit(
+        history = self.autoencoder_px.fit(
+            x=train_data,
+            y=train_data,
+            epochs=epoch,
+            batch_size=batch_size,
+            shuffle=True,
+            validation_data=(test_data, test_data)
+        )
+        
+        plt.figure()
+        plt.plot(history.history['loss'])
+        plt.plot(history.history['val_loss'])
+        plt.title('model loss')
+        plt.ylabel('loss')
+        plt.xlabel('epoch')
+        plt.legend(['train', 'test'], loc='upper left')
+        plt.show()
+
+        return history.history
+
+    def train_AutoE_py(self, train_data, test_data, epoch, batch_size):
+
+        history = self.autoencoder_py.fit(
             x=train_data,
             y=train_data,
             epochs=epoch,
@@ -337,8 +430,8 @@ class ConvNet():
 
 
 def network_train(epoch_AutoE=10, batch_size_AutoE=32, epoch_DLDNN=10,
- batch_size_DLDNN=32, AutoE_psi_train=False, AutoE_p_train=False,
- DLDNN_train=False
+ batch_size_DLDNN=32, AutoE_psi_train=False, AutoE_px_train=False, 
+ AutoE_py_train=False, DLDNN_train=False
 ):    
     
     # loading dataset from pickle file
@@ -364,14 +457,20 @@ def network_train(epoch_AutoE=10, batch_size_AutoE=32, epoch_DLDNN=10,
         NN.autoencoder_psi.save('model_autoencoder_psi.h5')
         np.save('AutoE_psi_history.npy',history)
 
-    if AutoE_p_train:
-        history = NN.train_AutoE_p(Data_train[1], Data_test[1], epoch_AutoE, batch_size_AutoE)
-        NN.autoencoder_p.save('model_autoencoder_p.h5')
-        np.save('AutoE_p_history.npy',history)
+    if AutoE_px_train:
+        history = NN.train_AutoE_px(Data_train[1], Data_test[1], epoch_AutoE, batch_size_AutoE)
+        NN.autoencoder_px.save('model_autoencoder_px.h5')
+        np.save('AutoE_px_history.npy',history)
+    
+    if AutoE_py_train:
+        history = NN.train_AutoE_py(Data_train[1], Data_test[1], epoch_AutoE, batch_size_AutoE)
+        NN.autoencoder_py.save('model_autoencoder_py.h5')
+        np.save('AutoE_py_history.npy',history)
     
     #load the autoencoder weight for transfer learning 
     NN.autoencoder_psi.load_weights('model_autoencoder_psi.h5')
-    NN.autoencoder_p.load_weights('model_autoencoder_p.h5')
+    NN.autoencoder_p.load_weights('model_autoencoder_px.h5')
+    NN.autoencoder_p.load_weights('model_autoencoder_py.h5')
     # freeze the decoder's weights
     #NN.decoder_psi.trainable = False
     #NN.decoder_p.trainable = False
@@ -425,7 +524,7 @@ batch_size_AutoE = 32
 epoch_DLDNN = 20
 batch_size_DLDNN = 32
 network_train(epoch_AutoE, batch_size_AutoE, epoch_DLDNN, batch_size_DLDNN,
- AutoE_psi_train=False, AutoE_p_train=False, DLDNN_train=False 
+ AutoE_psi_train=False, AutoE_px_train=False, AutoE_py_train=False, DLDNN_train=False 
 )
 
 D = 20
