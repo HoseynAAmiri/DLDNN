@@ -11,7 +11,7 @@ utl = utl()
 '''
 The settings that creates database
 D is the diameter of pillars
-G is the gap between pilarrs
+G is the gap between pillars
 N is the periodic number of pillars lattice
 Re is the Reynols number
 '''
@@ -126,7 +126,8 @@ def compile_data(grid_size):
                                        x_grid, y_grid, recover=True)
 
             px, py = utl.gradient(p_interp, dx, dy)
-            px = utl.insert_mask(px, (x_grid, y_grid), )
+            px = utl.insert_mask(px, (x_grid, y_grid), pillar)
+            py = utl.insert_mask(py, (x_grid, y_grid), pillar)
 
             # Make dataset
             dataset_psi.append(psi_interp)
@@ -152,7 +153,7 @@ if __name__ == "__main__":
 
     grid_size = (128, 128)
 
-    generate_data('DLD_COMSOL.mph', D, N, G, RE)
+    # generate_data('DLD_COMSOL.mph', D, N, G, RE)
 
     dataset = compile_data(grid_size)
     utl.save_data(dataset, 'dataset')
