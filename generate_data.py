@@ -3,9 +3,8 @@ import mph
 import csv
 import time
 from tqdm import tqdm
-import pickle
 import numpy as np
-from DLD_env import DLD_env, Pillar
+from DLD_env import Pillar
 from DLD_Utils import DLD_Utils as utl
 utl = utl()
 '''
