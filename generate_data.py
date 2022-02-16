@@ -95,7 +95,8 @@ def compile_data(grid_size):
         directory) if os.path.isdir(os.path.join(directory, name))]
 
     dataset_psi = []
-    dataset_p = []
+    dataset_px = []
+    dataset_py = []
     labels = []
     for folder, p1 in zip(folders, tqdm(range(len(folders)))):
         folder_dir = directory + "\\" + folder
@@ -124,13 +125,15 @@ def compile_data(grid_size):
             p_interp = utl.interp2grid(x_mapped, y_mapped, data[:, 3],
                                        x_grid, y_grid, recover=True)
 
+
             # Make dataset
             dataset_psi.append(psi_interp)
-            dataset_p.append(p_interp)
+            dataset_px.append(px_interp)
+            dataset_py.append(py_interp)
 
             time.sleep(0.1)
 
-    return (np.array(dataset_psi), np.array(dataset_p), np.array(labels))
+    return (np.array(dataset_psi), np.array(dataset_px), np.array(dataset_py), np.array(labels))
 
 
 '''
