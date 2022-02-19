@@ -35,26 +35,24 @@ class PINN:
         # define network
         #initializer = tf.keras.initializers.GlorotUniform()# , kernel_initializer=initializer
         def network_func(input, hidden_layers): 
+
             for i, layer in enumerate(hidden_layers):
                 if i==0:
                     X = Dense(layer, activation="tanh")(input)
-                    #X = layers.Dropout(0.2)(X)
                 else:
                     X = Dense(layer, activation="tanh")(X)
-                    #X = layers.Dropout(0.2)(X)
+
             output = Dense(output_shape, activation='linear')(X)
             return output
         
         input = Input(shape=input_shape, name="Network_Input")
 
-        output = network_func(input, hidden_layers)
+        psi = network_func(input, hidden_layers)
+        p = network_func(input, hidden_layers)
 
         x = Lambda(lambda z: z[:, 0:1], name='x')(input)
         y = Lambda(lambda z: z[:, 1:2], name='y')(input)
         Re = Lambda(lambda z: z[:, 5:6], name='Re')(input)
-
-        psi = Lambda(lambda z: z[:, 0:1], name='psi')(output)
-        p = Lambda(lambda z: z[:, 1:2], name='p')(output)
 
         u = gradient(psi, y, name='u')
         v = gradient(-psi, x, name='v')
@@ -120,10 +118,10 @@ class PINN:
 
 if __name__ == "__main__":
 
-    N_train = 500_000
+    N_train = 100_000
     epoch =  1000
-    batch_size = 32
-    hidden_layers = 10*[20]
+    batch_size = 256
+    hidden_layers = 10*[50]
     
     # Load Data
     dataset = utl.load_data('dataset1')
