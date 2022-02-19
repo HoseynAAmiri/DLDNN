@@ -1,4 +1,5 @@
 import os
+from tkinter import Y
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import numpy as np
 
@@ -23,18 +24,23 @@ class PINN:
     def create_model(self, input_shape, output_shape, hidden_layers, summary=False):
         
         # Define gradient function
-        def grad(y, x, nameit):    
-            return Lambda(lambda z: tf.gradients(z[0], z[1], unconnected_gradients='zero')[0], name=nameit)([y, x]) 
-        
+        def gradient(y, x, order=1, name='gradient'):
+
+            g = Lambda(lambda z: tf.gradients(z[0], z[1], unconnected_gradients='zero')[0], name=name)
+            for _ in range(order):
+                y = g([y, x])
+
+            return y
+
         # define network
         #initializer = tf.keras.initializers.GlorotUniform()# , kernel_initializer=initializer
         def network_func(input, hidden_layers): 
             for i, layer in enumerate(hidden_layers):
                 if i==0:
-                    X = Dense(layer, activation="relu")(input)
+                    X = Dense(layer, activation="tanh")(input)
                     #X = layers.Dropout(0.2)(X)
                 else:
-                    X = Dense(layer, activation="relu")(X)
+                    X = Dense(layer, activation="tanh")(X)
                     #X = layers.Dropout(0.2)(X)
             output = Dense(output_shape, activation='linear')(X)
             return output
@@ -50,32 +56,32 @@ class PINN:
         psi = Lambda(lambda z: z[:, 0:1], name='psi')(output)
         p = Lambda(lambda z: z[:, 1:2], name='p')(output)
 
-        u = grad(psi, y,'u')
-        v = grad(-psi, x,'v')
+        u = gradient(psi, y, name='u')
+        v = gradient(-psi, x, name='v')
         
-        u_x = grad(u, x,'u_x')
-        u_y = grad(u, y,'u_y')
-        u_xx = grad(u_x, x,'u_xx')
-        u_yy = grad(u_y, y,'u_yy')
+        u_x = gradient(u, x, name='u_x')
+        u_y = gradient(u, y, name='u_y')
+        u_xx = gradient(u, x, order=2, name='u_xx')
+        u_yy = gradient(u, y, order=2, name='u_yy')
 
-        v_x = grad(v, x,'v_x')
-        v_y = grad(v, y,'v_y')
-        v_xx = grad(v_x, x,'v_xx')
-        v_yy = grad(v_y, y,'v_yy')
+        v_x = gradient(v, x, name='v_x')
+        v_y = gradient(v, y, name='v_y')
+        v_xx = gradient(v, x, order=2, name='v_xx')
+        v_yy = gradient(v, y, order=2, name='v_yy')
 
-        p_x = grad(p, x, 'p_x')
-        p_y = grad(p, y, 'p_y')
+        p_x = gradient(p, x, name='p_x')
+        p_y = gradient(p, y, name='p_y')
         
-        def NS_func(z, nameit):
+        def NS_func(z, name):
             # f_u = (u*u_x + v*u_y) + p_x - (u_xx + u_yy) / Re
             # f_v = (u*v_x + v*v_y) + p_y - (v_xx + v_yy) / Re   
-            return Lambda(lambda z: ((z[0]*z[1]+z[2]*z[3])+z[4]-(z[5]+z[6]))/z[7], output_shape=[1], name=nameit)(z) 
+            return Lambda(lambda z: (z[0]*z[1]+z[2]*z[3])*z[4]+z[5]-(z[6]+z[7]), output_shape=[1], name=name)(z) 
         
-        f_u = NS_func([u, u_x, v, u_y, p_x, u_xx, u_yy, Re], 'f_u')
-        f_v = NS_func([u, v_x, v, v_y, p_y, v_xx, v_yy, Re], 'f_v')
+        f_u = NS_func([u, u_x, v, u_y, Re, p_x, u_xx, u_yy], 'f_u')
+        f_v = NS_func([u, v_x, v, v_y, Re, p_y, v_xx, v_yy], 'f_v')
         continuity = Add(name='continuity')([u_x, v_y])
 
-        self.neural_net = Model(inputs=input, outputs=[psi, p], name="neural_net")
+        self.neural_net = Model(inputs=input, outputs=[psi, p, f_u, f_v, continuity], name="neural_net")
         
         if summary:
             self.neural_net.summary()
@@ -83,10 +89,10 @@ class PINN:
         
         # set optimizer
         self.opt = keras.optimizers.Adam()
-        mse = keras.losses.MeanSquaredError()           
-        losses = {"psi":mse, "p":mse}
+        # mse = keras.losses.MeanSquaredError()           
+        # losses = {"psi":mse, "p":mse}
         #, , "f_u":mse, "f_v":mse, "continuity":mse
-        self.neural_net.compile(optimizer=self.opt, loss=losses)
+        self.neural_net.compile(optimizer=self.opt, loss='mse')
     
     
     def train(self, x_train, y_train, x_test, y_test, epoch, batch_size):
@@ -115,7 +121,7 @@ class PINN:
 if __name__ == "__main__":
 
     N_train = 500_000
-    epoch =  10
+    epoch =  1000
     batch_size = 32
     hidden_layers = 10*[128]
     
@@ -210,12 +216,9 @@ if __name__ == "__main__":
     
  
     # Training
-    # model = PINN(X_nn_train.shape[1], y_nn_train.shape[1], hidden_layers, summary=False)
-    model = PINN(6, 2, hidden_layers, summary=True)
+    model = PINN(X_nn_train.shape[1], y_nn_train.shape[1], hidden_layers, summary=False)
     
-    Before = model.neural_net.get_weights()
     model.train(X_nn_train, y_nn_train, X_nn_test, y_nn_test, epoch, batch_size)
-    after = model.neural_net.get_weights()
     
     # saving
     model.neural_net.save(f'models/PINN_{strftime("%Y-%m-%d_%H-%M-%S")}.model')

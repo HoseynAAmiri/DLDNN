@@ -9,7 +9,7 @@ from tensorflow.keras import regularizers
 from tensorflow.keras.layers import Lambda, Dense, Input
 
 
-def grad(y, x, order=1, name='gradient'):
+def gradient(y, x, order=1, name='gradient'):
 
     g = Lambda(lambda z: tf.gradients(z[0], z[1], unconnected_gradients='zero')[0], name=name)
     ds = y
@@ -32,9 +32,9 @@ x1 = Input(shape=1)
 
 nn = network(x1)
 
-g1 = grad(nn, x1, order=1, name="g1")
-g2 = grad(nn, x1, order=2, name="g2")
-g3 = grad(nn, x1, order=3, name="g3")
+g1 = gradient(nn, x1, order=1, name="g1")
+g2 = gradient(nn, x1, order=2, name="g2")
+g3 = gradient(nn, x1, order=3, name="g3")
 
 model = Model(inputs=[x1], outputs=[nn, g1, g2, g3])
 
