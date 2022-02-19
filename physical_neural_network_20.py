@@ -123,10 +123,10 @@ if __name__ == "__main__":
     N_train = 500_000
     epoch =  1000
     batch_size = 32
-    hidden_layers = 10*[128]
+    hidden_layers = 10*[20]
     
     # Load Data
-    dataset = utl.load_data('dataset')
+    dataset = utl.load_data('dataset1')
 
     psi = dataset[0]  # L x N x N
     pre = dataset[1]  # L x N x N
@@ -190,9 +190,7 @@ if __name__ == "__main__":
     c_train = np.zeros_like(s_train)
 
     X_nn_train = np.concatenate([x_train, y_train, d_train, n_train, g_train, r_train], 1)
-    # y_nn_train = np.concatenate([s_train, p_train, c_train, c_train, c_train], 1)
-    y_nn_train = [s_train, p_train]
-    
+    y_nn_train = np.concatenate([s_train, p_train, c_train, c_train, c_train], 1)
     
     # Test Data
     test_idx = np.setdiff1d(np.arange(N * N * L), train_idx)[0:1000]
@@ -211,9 +209,7 @@ if __name__ == "__main__":
     c_test = np.zeros_like(s_test)
 
     X_nn_test = np.concatenate([x_test, y_test, d_test, n_test, g_test, r_test], 1)
-    # y_nn_test = np.concatenate([s_test, p_test, c_test, c_test, c_test], 1)
-    y_nn_test = [s_test, p_test]
-    
+    y_nn_test = np.concatenate([s_test, p_test, c_test, c_test, c_test], 1)
  
     # Training
     model = PINN(X_nn_train.shape[1], y_nn_train.shape[1], hidden_layers, summary=False)
