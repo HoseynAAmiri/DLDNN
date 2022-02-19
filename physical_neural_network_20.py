@@ -71,8 +71,8 @@ class PINN:
         p_y = gradient(p, y, name='p_y')
         
         def NS_func(z, name):
-            # f_u = (u*u_x + v*u_y) + p_x - (u_xx + u_yy) / Re
-            # f_v = (u*v_x + v*v_y) + p_y - (v_xx + v_yy) / Re   
+            # f_u = (u*u_x + v*u_y) * Re + p_x - (u_xx + u_yy)
+            # f_v = (u*v_x + v*v_y) * Re + p_y - (v_xx + v_yy)  
             return Lambda(lambda z: (z[0]*z[1]+z[2]*z[3])*z[4]+z[5]-(z[6]+z[7]), output_shape=[1], name=name)(z) 
         
         f_u = NS_func([u, u_x, v, u_y, Re, p_x, u_xx, u_yy], 'f_u')
