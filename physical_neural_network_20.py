@@ -85,7 +85,7 @@ class PINN:
         
         if summary:
             # self.neural_net.summary()
-            plot_model(self.neural_net, to_file='PINN3_plot.png', show_shapes=True, show_layer_names=True)
+            plot_model(self.neural_net, to_file='PINN_plot.png', show_shapes=True, show_layer_names=True)
         
         # set optimizer
         self.opt = keras.optimizers.Adam()
@@ -122,7 +122,7 @@ if __name__ == "__main__":
 
     N_train = 100_000
     epoch =  1000
-    batch_size = 256
+    batch_size = 128
     hidden_layers = 10*[25]
     
     # Load Data
@@ -196,7 +196,6 @@ if __name__ == "__main__":
     c_train = np.zeros_like(s_train)
 
     X_nn_train = [x_train, y_train, d_train, n_train, g_train, r_train]
-    #y_nn_train = np.concatenate([s_train, px_train, py_train, c_train, c_train, c_train], 1)
     y_nn_train = [s_train, px_train, py_train, c_train, c_train, c_train]
     
     # Test Data
@@ -217,11 +216,10 @@ if __name__ == "__main__":
     c_test = np.zeros_like(s_test)
 
     X_nn_test = [x_test, y_test, d_test, n_test, g_test, r_test]
-    # y_nn_test = np.concatenate([s_test, px_test, py_test, c_test, c_test, c_test], 1)
     y_nn_test = [s_test, px_test, py_test, c_test, c_test, c_test]
 
     # Training
-    model = PINN(6, 1, hidden_layers, summary=True)
+    model = PINN(6, 1, hidden_layers, summary=False)
     
     model.train(X_nn_train, y_nn_train, X_nn_test, y_nn_test, epoch, batch_size)
     
