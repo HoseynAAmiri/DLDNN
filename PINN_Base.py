@@ -37,19 +37,17 @@ g1 = gradient(nn, x1, order=1, name="g1")
 g2 = gradient(nn, x1, order=2, name="g2")
 g3 = gradient(nn, x1, order=3, name="g3")
 
-A = Add()([x1, x1])
-S = Subtract()([g1, A])
 
-model = Model(inputs=[x1], outputs=[nn, S, g2, g3])
+model = Model(inputs=[x1], outputs=[nn, g1, g2, g3])
 plot_model(model, to_file='PINN_Base_plot.png', show_shapes=True, show_layer_names=True)
 
 # model.summary()
 
 x = np.linspace(-100, 100, 10001) / 100
-y = (x ** 2)
+y = 20 * (x ** 2)
 # dydx = 2 * x
-dydx = np.zeros_like(x)
-dy2dx2 = np.ones_like(x) * 2
+dydx = 20 * 2 * x
+dy2dx2 = np.ones_like(x) * 40
 dy3dx3 = np.zeros_like(x)
 
 # x = np.linspace(1, 10, 10).reshape(10, 1)
