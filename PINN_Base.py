@@ -6,8 +6,8 @@ import tensorflow as tf
 import tensorflow.keras.backend as K
 from tensorflow.keras import Model
 from tensorflow.keras import regularizers
-from tensorflow.keras.layers import Lambda, Dense, Input
-
+from tensorflow.keras.layers import Lambda, Add, Multiply, Subtract, Dense, Input
+from keras.utils.vis_utils import plot_model
 
 def gradient(y, x, order=1, name='gradient'):
 
@@ -36,13 +36,18 @@ g1 = gradient(nn, x1, order=1, name="g1")
 g2 = gradient(nn, x1, order=2, name="g2")
 g3 = gradient(nn, x1, order=3, name="g3")
 
-model = Model(inputs=[x1], outputs=[nn, g1, g2, g3])
+D = Add()([x1, x1])
+S = Subtract()([g1, D])
+
+model = Model(inputs=[x1], outputs=[nn, S, g2, g3])
+plot_model(model, to_file='PINN_Base_plot.png', show_shapes=True, show_layer_names=True)
 
 # model.summary()
 
 x = np.linspace(-100, 100, 10001) / 100
 y = (x ** 2)
-dydx = 2 * x
+# dydx = 2 * x
+dydx = np.zeros_like(x)
 dy2dx2 = np.ones_like(x) * 2
 dy3dx3 = np.zeros_like(x)
 

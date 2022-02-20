@@ -350,7 +350,7 @@ class ConvNet():
             Re = FCNN_input[:, 3]
 
             f_u = Re * (u * u_x + v * u_y) + Re * decoded_img_px - (u_xx + u_yy) 
-            f_v = Re * (u * v_x + v * v_y) + Re * decoded_img_px - (v_xx + v_yy) 
+            f_v = Re * (u * v_x + v * v_y) + Re * decoded_img_py - (v_xx + v_yy) 
     
             PINN_loss = tf.math.reduce_sum(tf.math.abs(f_u)) + tf.math.reduce_sum(
                 tf.math.abs(f_v)) + tf.math.reduce_sum(tf.math.abs(u_x + v_y))
