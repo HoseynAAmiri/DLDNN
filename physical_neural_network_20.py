@@ -7,7 +7,7 @@ import numpy as np
 # from tensorflow.python.framework.ops import disable_eager_execution
 # disable_eager_execution()
 import numpy as np 
-from tensorflow.keras.layers import Lambda, Add, Multiply, Subtract, Dense, Input
+from tensorflow.keras.layers import Lambda, Add, Multiply, Concatenate, Subtract, Dense, Input
 from tensorflow.keras import Model
 import tensorflow.keras.backend as K
 import tensorflow as tf 
@@ -44,67 +44,47 @@ class PINN:
                     X = Dense(layer, activation="tanh")(X)
 
             output = Dense(output_shape, activation='linear')(X)
+
             return output
         
-        input = Input(shape=input_shape, name="Network_Input")
+        input = [Input(shape=1) for _ in range(input_shape)]
+        conc = Concatenate()(input)
 
-        psi = network_func(input, hidden_layers)
-        px = network_func(input, hidden_layers)
-        py = network_func(input, hidden_layers)
+        psi = network_func(conc, hidden_layers)
+        p_x = network_func(conc, hidden_layers)
+        p_y = network_func(conc, hidden_layers)
 
-        x = Lambda(lambda z: z[:, 0:1], name='x')(input)
-        y = Lambda(lambda z: z[:, 1:2], name='y')(input)
-        Re = Lambda(lambda z: z[:, 5], name='Re')(input)
+        x = input[0]
+        y = input[1]
+        Re = input[5]
 
         u = gradient(psi, y, name='u')
         v = gradient(-psi, x, name='v')
         
         u_x = gradient(u, x, name='u_x')
         u_y = gradient(u, y, name='u_y')
-        u_xx = gradient(u, x, order=2, name='u_xx')
-        u_yy = gradient(u, y, order=2, name='u_yy')
+        u_xx = gradient(u_x, x, name='u_xx')
+        u_yy = gradient(u_y, y, name='u_yy')
 
         v_x = gradient(v, x, name='v_x')
         v_y = gradient(v, y, name='v_y')
-        v_xx = gradient(v, x, order=2, name='v_xx')
-        v_yy = gradient(v, y, order=2, name='v_yy')
+        v_xx = gradient(v_x, x, name='v_xx')
+        v_yy = gradient(v_y, y, name='v_yy')
 
         def NS_func(z, name):
             # f_u = (u*u_x + v*u_y) * Re + p_x - (u_xx + u_yy)
             # f_v = (u*v_x + v*v_y) * Re + p_y - (v_xx + v_yy)  
             return Lambda(lambda z: ((z[0]*z[1]+z[2]*z[3])*z[4]+z[5]-(z[6]+z[7])), name=name)(z) 
         
-        # f_u = NS_func([u, u_x, v, u_y, Re, p_x, u_xx, u_yy], 'f_u')
-        # f_v = NS_func([u, v_x, v, v_y, Re, p_y, v_xx, v_yy], 'f_v')
+        f_u = NS_func([u, u_x, v, u_y, Re, p_x, u_xx, u_yy], 'f_u')
+        f_v = NS_func([u, v_x, v, v_y, Re, p_y, v_xx, v_yy], 'f_v')
 
-        # def NS_func(u, u_x, v, u_y, Re, p_x, u_xx, u_yy):
-        #     term1 = Multiply()([u, u_x])
-        #     term2 = Multiply()([v, u_y])
-        #     term3 = Add()([term1, term2])
-        #     term4 = Multiply()([term3, Re])
-        #     term5 = Add()([term4, p_x])
-        #     term6 = Add()([u_xx, u_yy])
-        #     term7 = Add()([term5, term6])
-
-        #     return  term7
-    
-        term1 = Multiply()([u, u_x])
-        term2 = Multiply()([v, u_y])
-        term3 = Add()([term1, term2])
-        term4 = Multiply()([term3, Re])
-        term5 = Add()([term4, p_x])
-        term6 = Add()([u_xx, u_yy])
-        term7 = Add()([term5, term6])
-        
-        print(Re)
-        print(u_x)
-        
         continuity = Add(name='continuity')([u_x, v_y])
 
-        self.neural_net = Model(inputs=input, outputs=[psi, px, py, term4, term5, continuity], name="neural_net")
+        self.neural_net = Model(inputs=input, outputs=[psi, p_x, p_y, f_u, f_v, continuity], name="neural_net")
         
         if summary:
-            self.neural_net.summary()
+            # self.neural_net.summary()
             plot_model(self.neural_net, to_file='PINN3_plot.png', show_shapes=True, show_layer_names=True)
         
         # set optimizer
@@ -215,7 +195,7 @@ if __name__ == "__main__":
     # constraints
     c_train = np.zeros_like(s_train)
 
-    X_nn_train = np.concatenate([x_train, y_train, d_train, n_train, g_train, r_train], 1)
+    X_nn_train = [x_train, y_train, d_train, n_train, g_train, r_train]
     #y_nn_train = np.concatenate([s_train, px_train, py_train, c_train, c_train, c_train], 1)
     y_nn_train = [s_train, px_train, py_train, c_train, c_train, c_train]
     
@@ -236,7 +216,7 @@ if __name__ == "__main__":
 
     c_test = np.zeros_like(s_test)
 
-    X_nn_test = np.concatenate([x_test, y_test, d_test, n_test, g_test, r_test], 1)
+    X_nn_test = [x_test, y_test, d_test, n_test, g_test, r_test]
     # y_nn_test = np.concatenate([s_test, px_test, py_test, c_test, c_test, c_test], 1)
     y_nn_test = [s_test, px_test, py_test, c_test, c_test, c_test]
 

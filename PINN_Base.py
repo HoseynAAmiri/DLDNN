@@ -7,7 +7,7 @@ import tensorflow.keras.backend as K
 from tensorflow.keras import Model
 from tensorflow.keras import regularizers
 from tensorflow.keras.layers import Lambda, Add, Multiply, Subtract, Dense, Input
-from keras.utils.vis_utils import plot_model
+from tensorflow.keras.utils import plot_model
 
 def gradient(y, x, order=1, name='gradient'):
 
@@ -29,6 +29,7 @@ def network(i):
     return nn
 
 x1 = Input(shape=1)
+x2 = Input(shape=1)
 
 nn = network(x1)
 
@@ -36,8 +37,8 @@ g1 = gradient(nn, x1, order=1, name="g1")
 g2 = gradient(nn, x1, order=2, name="g2")
 g3 = gradient(nn, x1, order=3, name="g3")
 
-D = Add()([x1, x1])
-S = Subtract()([g1, D])
+A = Add()([x1, x1])
+S = Subtract()([g1, A])
 
 model = Model(inputs=[x1], outputs=[nn, S, g2, g3])
 plot_model(model, to_file='PINN_Base_plot.png', show_shapes=True, show_layer_names=True)
