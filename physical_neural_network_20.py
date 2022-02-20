@@ -1,66 +1,68 @@
+import tensorflow as tf
+from DLD_Utils import DLD_Utils as utl
+import matplotlib.pyplot as plt
+from time import strftime
+import tensorflow.keras as keras
+from keras.utils.vis_utils import plot_model
+import tensorflow.keras.backend as K
+from tensorflow.keras import Model
+from tensorflow.keras.layers import Lambda, Add, Multiply, Concatenate, Subtract, Dense, Input
+import numpy as np
 from ast import Sub
 import os
 from tkinter import Y
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-import numpy as np
 
 # from tensorflow.python.framework.ops import disable_eager_execution
 # disable_eager_execution()
-import numpy as np 
-from tensorflow.keras.layers import Lambda, Add, Multiply, Concatenate, Subtract, Dense, Input
-from tensorflow.keras import Model
-import tensorflow.keras.backend as K
-import tensorflow as tf 
-from keras.utils.vis_utils import plot_model
-import tensorflow.keras as keras
-from time import strftime
-import matplotlib.pyplot as plt
-from DLD_Utils import DLD_Utils as utl
-utl=utl()
+utl = utl()
+
 
 class PINN:
     def __init__(self, input_shape, output_shape, hidden_layers, summary=False):
-        self.create_model(input_shape, output_shape, hidden_layers, summary=summary)
-    
-    def create_model(self, input_shape, output_shape, hidden_layers, summary=False):
-        
-        # Define gradient function
-        def gradient(y, x, order=1, name='gradient'):
+        self.create_model(input_shape, output_shape,
+                          hidden_layers, summary=summary)
 
-            g = Lambda(lambda z: tf.gradients(z[0], z[1], unconnected_gradients='zero')[0], name=name)
+    def create_model(self, input_shape, output_shape, hidden_layers, summary=False):
+
+        # Define gradient function
+        def gradient(y, x, name, order=1):
+
+            g = Lambda(lambda z: tf.gradients(
+                z[0], z[1], unconnected_gradients='zero')[0], name=name)
             for _ in range(order):
                 y = g([y, x])
 
             return y
 
         # define network
-        #initializer = tf.keras.initializers.GlorotUniform()# , kernel_initializer=initializer
-        def network_func(input, hidden_layers): 
+        initializer = tf.keras.initializers.GlorotUniform()
+
+        def network_func(nn_i, hidden_layers, name):
 
             for i, layer in enumerate(hidden_layers):
-                if i==0:
-                    X = Dense(layer, activation="tanh")(input)
-                else:
-                    X = Dense(layer, activation="tanh")(X)
+                nn_i = Dense(layer, activation="tanh",
+                             kernel_initializer=initializer)(nn_i)
 
-            output = Dense(output_shape, activation='linear')(X)
+            output = Dense(output_shape, activation='linear',
+                           kernel_initializer=initializer, name=name)(nn_i)
 
             return output
-        
+
         input = [Input(shape=1) for _ in range(input_shape)]
-        conc = Concatenate()(input)
-
-        psi = network_func(conc, hidden_layers)
-        p_x = network_func(conc, hidden_layers)
-        p_y = network_func(conc, hidden_layers)
-
         x = input[0]
         y = input[1]
         Re = input[5]
 
+        conc = Concatenate()(input)
+
+        psi = network_func(conc, hidden_layers, 'Psi')
+        p_x = network_func(conc, hidden_layers, 'P_x')
+        p_y = network_func(conc, hidden_layers, 'P_y')
+
         u = gradient(psi, y, name='u')
         v = gradient(-psi, x, name='v')
-        
+
         u_x = gradient(u, x, name='u_x')
         u_y = gradient(u, y, name='u_y')
         u_xx = gradient(u_x, x, name='u_xx')
@@ -73,28 +75,26 @@ class PINN:
 
         def NS_func(z, name):
             # f_u = (u*u_x + v*u_y) * Re + p_x - (u_xx + u_yy)
-            # f_v = (u*v_x + v*v_y) * Re + p_y - (v_xx + v_yy)  
-            return Lambda(lambda z: ((z[0]*z[1]+z[2]*z[3])*z[4]+z[5]-(z[6]+z[7])), name=name)(z) 
-        
+            # f_v = (u*v_x + v*v_y) * Re + p_y - (v_xx + v_yy)
+            return Lambda(lambda z: ((z[0]*z[1]+z[2]*z[3])*z[4]+z[5]-(z[6]+z[7])), name=name)(z)
+
         f_u = NS_func([u, u_x, v, u_y, Re, p_x, u_xx, u_yy], 'f_u')
         f_v = NS_func([u, v_x, v, v_y, Re, p_y, v_xx, v_yy], 'f_v')
 
         continuity = Add(name='continuity')([u_x, v_y])
 
-        self.neural_net = Model(inputs=input, outputs=[psi, p_x, p_y, f_u, f_v, continuity], name="neural_net")
-        
+        self.neural_net = Model(inputs=input, outputs=[
+                                psi, p_x, p_y, f_u, f_v, continuity], name="neural_net")
+
         if summary:
-            # self.neural_net.summary()
-            plot_model(self.neural_net, to_file='PINN_plot.png', show_shapes=True, show_layer_names=True)
-        
+            self.neural_net.summary()
+            plot_model(self.neural_net, to_file='PINN_plot.png',
+                       show_shapes=True, show_layer_names=True)
+
         # set optimizer
         self.opt = keras.optimizers.Adam()
-        # mse = keras.losses.MeanSquaredError()           
-        # losses = {"psi":mse, "p":mse}
-        #, , "f_u":mse, "f_v":mse, "continuity":mse
         self.neural_net.compile(optimizer=self.opt, loss='mse')
-    
-    
+
     def train(self, x_train, y_train, x_test, y_test, epoch, batch_size):
         # Stroing training logs
         history = self.neural_net.fit(
@@ -104,7 +104,7 @@ class PINN:
             batch_size=batch_size,
             shuffle=True,
             validation_data=(x_test, y_test))
-        
+
         plt.figure()
         plt.plot(history.history['loss'])
         plt.plot(history.history['val_loss'])
@@ -114,17 +114,17 @@ class PINN:
         plt.yscale('log')
         plt.legend(['train', 'test'], loc='upper left')
         plt.show()
-    
+
         return history.history
-           
+
 
 if __name__ == "__main__":
 
-    N_train = 100_000
-    epoch =  1000
-    batch_size = 128
-    hidden_layers = 10*[25]
-    
+    N_train = 200_000
+    epoch = 100
+    batch_size = 1024
+    hidden_layers = 10*[20]
+
     # Load Data
     dataset = utl.load_data('dataset')
 
@@ -169,17 +169,17 @@ if __name__ == "__main__":
     nn = n/np.max(np.abs(n))
     gn = g/np.max(np.abs(g))
     rn = r/np.max(np.abs(r))
-    
-    sn = s/np.max(np.abs(s))
-    pnx = px/np.max(np.abs(px))
-    pny = py/np.max(np.abs(py))
+
+    sn = s  # /np.max(np.abs(s))
+    pnx = px  # /np.max(np.abs(px))
+    pny = py  # /np.max(np.abs(py))
 
     ######################################################################
     ######################## Noiseles Data ###############################
     ######################################################################
     # Training Data
     train_idx = np.random.choice(N * N * L, N_train, replace=False)
-    
+
     x_train = x[train_idx, :]
     y_train = y[train_idx, :]
 
@@ -191,19 +191,19 @@ if __name__ == "__main__":
     s_train = sn[train_idx, :]
     px_train = pnx[train_idx, :]
     py_train = pny[train_idx, :]
-    
+
     # constraints
     c_train = np.zeros_like(s_train)
 
     X_nn_train = [x_train, y_train, d_train, n_train, g_train, r_train]
     y_nn_train = [s_train, px_train, py_train, c_train, c_train, c_train]
-    
+
     # Test Data
-    test_idx = np.setdiff1d(np.arange(N * N * L), train_idx)[0:1000]
-    
+    test_idx = np.setdiff1d(np.arange(N * N * L), train_idx)
+
     x_test = x[test_idx, :]
     y_test = y[test_idx, :]
-    
+
     d_test = dn[test_idx, :]
     n_test = nn[test_idx, :]
     g_test = gn[test_idx, :]
@@ -219,12 +219,12 @@ if __name__ == "__main__":
     y_nn_test = [s_test, px_test, py_test, c_test, c_test, c_test]
 
     # Training
-    model = PINN(6, 1, hidden_layers, summary=False)
-    
-    model.train(X_nn_train, y_nn_train, X_nn_test, y_nn_test, epoch, batch_size)
-    
+    model = PINN(6, 1, hidden_layers, summary=True)
+
+    model.train(X_nn_train, y_nn_train, X_nn_test,
+                y_nn_test, epoch, batch_size)
+
     # saving
     model.neural_net.save(f'models/PINN_{strftime("%Y-%m-%d_%H-%M-%S")}.model')
-    
+
     # A = model.neural_net.predict(X_norm_train[0:20])
-    
