@@ -145,14 +145,13 @@ if __name__ == "__main__":
     Re = [0.01, 0.1, 0.2, 0.4, 0.8, 1, 2, 4, 6, 8, 10, 15, 20, 25, 30]
     '''
 
-    D = [10, 20, 30, 40, 50]
-    N = [3, 5, 7, 9]
-    G = [10, 20, 30, 40, 50]
-    RE = [0.01, 0.1, 0.2, 0.4, 0.8, 1]
+    D = [10]
+    N = [3]
+    G = [10]
+    RE = [0.01, 0.1, 0.2, 0.4, 0.8, 1, 2, 4, 6, 8, 10, 15, 20, 25, 30]
 
     grid_size = (128, 128)
-
-    # generate_data('DLD_COMSOL.mph', D, N, G, RE)
+    generate_data('DLD_COMSOL.mph', D, N, G, RE)
 
     dataset = compile_data(grid_size)
-    utl.save_data(dataset, 'dataset')
+    utl.save_data(dataset, 'tiny_dataset')

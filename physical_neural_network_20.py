@@ -34,16 +34,16 @@ class PINN:
             return y
 
         # define network
-        #initializer = tf.keras.initializers.GlorotUniform()# , kernel_initializer=initializer
+        initializer = tf.keras.initializers.GlorotUniform()# , kernel_initializer=initializer
         def network_func(input, hidden_layers): 
 
             for i, layer in enumerate(hidden_layers):
                 if i==0:
-                    X = Dense(layer, activation="tanh")(input)
+                    X = Dense(layer, activation="tanh", kernel_initializer=initializer)(input)
                 else:
-                    X = Dense(layer, activation="tanh")(X)
+                    X = Dense(layer, activation="tanh", kernel_initializer=initializer)(X)
 
-            output = Dense(output_shape, activation='linear')(X)
+            output = Dense(output_shape, activation='linear', kernel_initializer=initializer)(X)
 
             return output
         
@@ -120,13 +120,13 @@ class PINN:
 
 if __name__ == "__main__":
 
-    N_train = 100_000
-    epoch =  1000
-    batch_size = 128
-    hidden_layers = 10*[25]
+    N_train = 180_000
+    epoch =  100
+    batch_size = 512
+    hidden_layers = 10*[20]
     
     # Load Data
-    dataset = utl.load_data('dataset')
+    dataset = utl.load_data('tiny_dataset')
 
     psi = dataset[0]  # L x N x N
     p_x = dataset[1]  # L x N x N
@@ -170,9 +170,9 @@ if __name__ == "__main__":
     gn = g/np.max(np.abs(g))
     rn = r/np.max(np.abs(r))
     
-    sn = s/np.max(np.abs(s))
-    pnx = px/np.max(np.abs(px))
-    pny = py/np.max(np.abs(py))
+    sn = s#/np.max(np.abs(s))
+    pnx = px#/np.max(np.abs(px))
+    pny = py#/np.max(np.abs(py))
 
     ######################################################################
     ######################## Noiseles Data ###############################

@@ -4,12 +4,12 @@ from DLD_Utils import DLD_Utils as utl
 utl = utl()
 
 
-data = np.genfromtxt("psi_p.csv", delimiter=",")
-D = 20
-N = 10
-G_X = 40
+data = np.genfromtxt("Data\\D10\\10_3_10_0.01.csv", delimiter=",")
+D = 10
+N = 3
+G_X = 10
 G_R = 1
-Re = 1
+Re = 0.01
 grid_size = (128, 128)
 
 pillar = Pillar(D, N, G_X, G_R)
