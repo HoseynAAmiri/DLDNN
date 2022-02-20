@@ -1,21 +1,14 @@
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import tensorflow as tf
-from DLD_Utils import DLD_Utils as utl
-import matplotlib.pyplot as plt
 from time import strftime
 import tensorflow.keras as keras
 from keras.utils.vis_utils import plot_model
-import tensorflow.keras.backend as K
 from tensorflow.keras import Model
-from tensorflow.keras.layers import Lambda, Add, Multiply, Concatenate, Subtract, Dense, Input
+from tensorflow.keras.layers import Lambda, Add, Concatenate, Dense, Input
 import numpy as np
-from ast import Sub
-import os
-from tkinter import Y
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-
-# from tensorflow.python.framework.ops import disable_eager_execution
-# disable_eager_execution()
-utl = utl()
+import matplotlib.pyplot as plt
+from DLD_Utils import DLD_Utils as utl
 
 
 class PINN:

@@ -1,7 +1,6 @@
 import numpy as np
 from DLD_env import DLD_env, Pillar
 from DLD_Utils import DLD_Utils as utl
-utl = utl()
 
 
 data = np.genfromtxt("psi_p.csv", delimiter=",")
@@ -23,7 +22,7 @@ data1 = tuple([x_mapped, y_mapped, p])
 psi_interp = utl.interp2grid(
     x_mapped, y_mapped, psi, dld.x_grid, dld.y_grid, method='linear', recover=True)
 p_interp = utl.interp2grid(
-    x_mapped, y_mapped, p, dld.x_grid, dld.y_grid, method='linear', recover=False)
+    x_mapped, y_mapped, p, dld.x_grid, dld.y_grid, method='linear', recover=True)
 
 data2 = tuple([dld.x_grid.flatten(), dld.y_grid.flatten(), p_interp.flatten()])
 
