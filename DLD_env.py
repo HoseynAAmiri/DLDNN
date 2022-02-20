@@ -7,7 +7,7 @@ from shapely.geometry.polygon import Polygon
 from descartes import PolygonPatch
 import particle_trajectory as ptj
 from DLD_Utils import DLD_Utils as utl
-utl=utl()
+
 
 class DLD_env:
     def __init__(self, pillar, Re, resolution=(128, 128)):
@@ -17,9 +17,9 @@ class DLD_env:
         self.resolution = resolution
         self.x_grid, self.y_grid, self.dx, self.dy = self.grid()
         self.wd = self.wall_distance()
-    # the grid configuration for this modeling is set in this function 
+    
     def grid(self, grid_size=None):
-
+    # the grid configuration for this modeling is set in this function 
         if not grid_size:
             grid_size = self.resolution
 
@@ -34,10 +34,10 @@ class DLD_env:
         dy = yy[1] - yy[0]
 
         return x_grid, y_grid, dx, dy
-    # Wall distance is function which  measures the minimum distance between each point in the grid 
-    # from points on pillars
-    def wall_distance(self, plot=False):
 
+    def wall_distance(self, plot=False):
+    # Wall distance is function which measures the minimum distance between each point in the grid 
+    # from points on pillars
         X = np.array([])
         Y = np.array([])
         for pillar in self.pillar.pillars: 
@@ -84,9 +84,9 @@ class DLD_env:
             plt.show()
 
         return wall_distance
-    # this function simulate the particle trajectory by having domain shape, particle size and velocity fields
+    
     def simulate_particle(self, dp, uv, start_point, periods=1, plot=False, figsize=(9, 4)):
-
+    # this function simulate the particle trajectory by having domain shape, particle size and velocity fields
         
         nx, ny = utl.gradient(self.wd, self.dx, self.dy, recover=True)
 
@@ -132,9 +132,10 @@ class DLD_env:
 
         return stream
 
-# pillar class creates the domain from geometric parameters 
-# first one pillar is made then the other three are made accordingly. 
+
 class Pillar:
+    # pillar class creates the domain from geometric parameters 
+    # first one pillar is made then the other three are made accordingly. 
     def __init__(self, size, N, G_X, G_R=1, pillar_type='circle', origin=(0,0)):
 
         self.size = size
@@ -159,9 +160,9 @@ class Pillar:
         # Other pillars are created automatically
         self.pillars = self.to_pillars()
         
-    # The function creating other pillars from the initial one 
+    
     def to_pillars(self):
-
+    # The function creating other pillars from the initial one 
         pillar1 = self.pillar
         pillar2 = affinity.translate(pillar1, xoff=self.size+self.G_X, yoff=(self.size+self.G_X*self.G_R)/self.N)
         pillar3 = affinity.translate(pillar1, yoff=(self.size+self.G_X*self.G_R))
@@ -189,9 +190,9 @@ class Pillar:
 
         return pillars
     
-    # this function finds the grid points outside of the boundary by implementing pillars
+    
     def to_mask(self, grid):
-
+    # this function finds the grid points outside of the boundary by implementing pillars
         pillars = self.pillars
 
         grid_points = np.array([grid[0].flatten(), grid[1].flatten()]).T

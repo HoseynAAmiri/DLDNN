@@ -9,10 +9,8 @@ to handling results coming from the generated data
 '''
 
 
-class DLD_Utils:
-    def __init__(self):
-        pass
-    
+class DLD_Utils:    
+    @classmethod
     def add_mask(self, data, grid, pillar, mask_with=0):
 
         xy_mask, _ = pillar.to_mask(grid)
@@ -28,7 +26,8 @@ class DLD_Utils:
 
         return np.concatenate((data, mask_data))
 
-    def insert_mask(self, data, grid, pillar, mask_with=0):
+    @staticmethod
+    def insert_mask(data, grid, pillar, mask_with=0):
 
         _, idx = pillar.to_mask(grid)
 
@@ -40,9 +39,10 @@ class DLD_Utils:
         else:
             data[idx] = mask_with
             return data
-    # This function transform data from parallolegram into unitary square domain 
-    def parall2square(self, x, y, pillar):
-
+    
+    @staticmethod
+    def parall2square(x, y, pillar):
+    # This function transform data from parallolegram into unitary square domain
         slope = 1 / pillar.N
         # Domain shear transformation from parallelogram to rectangular
         x_mapped = x
@@ -56,9 +56,10 @@ class DLD_Utils:
         y_mapped = y_mapped / Y_mapped_MAX
 
         return x_mapped, y_mapped
-    # This function transform data from unitary square into the original parallelogeram domain 
-    def square2parall(self, x, y, pillar):
 
+    @staticmethod
+    def square2parall(x, y, pillar):
+        # This function transform data from unitary square into the original parallelogeram domain 
         slope = 1 / pillar.N
 
         X_MAX = pillar.D + pillar.G_X
@@ -73,8 +74,10 @@ class DLD_Utils:
         y_mapped = y_mapped + slope * x_mapped
 
         return x_mapped, y_mapped
-    # This function interpolate the data from any grid to the unitary grid 
-    def interp2grid(self, x_data, y_data, data, x_grid, y_grid, method='linear', recover=False):
+
+    @staticmethod
+    def interp2grid(x_data, y_data, data, x_grid, y_grid, method='linear', recover=False):
+    # This function interpolate the data from any grid to the unitary grid     
         # Interpolation of mapped data to x & y grid
         mapped = np.array([x_data, y_data]).T
         data_interp = griddata(mapped, data, (x_grid, y_grid), method=method)
@@ -85,9 +88,10 @@ class DLD_Utils:
             data_interp[np.isnan(data_interp)] = nearest[np.isnan(data_interp)]
 
         return data_interp
+    
+    @staticmethod
+    def compare_plots(data1, data2, figsize=(6, 3)):
     # Any two sets of data can be compared by this function
-    def compare_plots(self, data1, data2, figsize=(6, 3)):
-
         x, y, u, = data1[0], data1[1], data1[2]
         x_new, y_new, u_new, = data2[0], data2[1], data2[2]
 
@@ -107,11 +111,12 @@ class DLD_Utils:
         plt.colorbar()
 
         plt.show()
+
+    @classmethod
+    def gradient(self, field, dx, dy, recover=False):
     # Gradiant function simply gets a field as input and compute it's gradiant in x and y direction
     # here we used this function in two intences: first, coputing velocity vectors from psi field and
     # determining the normal vectors of pillars from wall distance function
-    def gradient(self, field, dx, dy, recover=False):
-
         grad_x = np.gradient(field, dx, axis=1)
         grad_y = np.gradient(field, dy, axis=0)
 
@@ -121,9 +126,10 @@ class DLD_Utils:
 
         
         return grad_x, grad_y
-    # this function fill the places in domain where gradiant was not computable 
-    def recover_gradient(self, u, recover_with=0):
 
+    @staticmethod
+    def recover_gradient(u, recover_with=0):
+    # this function fill the places in domain where gradiant was not computable 
         sub_u_h = u[:, -3:]
         sub_u_f_h = np.flip(u, axis=1)[:, -3:]
         sub_u_v = u[-3:, :]
@@ -138,19 +144,23 @@ class DLD_Utils:
         u[np.isnan(u)] = recover_with
 
         return u
-    # box delete function trim pillars coordinate out of the domain
-    def box_delete(self, array, MIN, MAX):
-        
+
+    @staticmethod
+    def box_delete(array, MIN, MAX):
+    # box delete function trim pillars coordinate out of the domain    
         min_array = np.min(array, axis=1)
         array_minimized = array[MIN <= min_array]
         max_array_minimized = np.max(array_minimized, axis=1)
 
         return array_minimized[max_array_minimized <= MAX]
 
-    def load_data(self, name='data'):
+    @staticmethod
+    def load_data(name='data'):
         with open(name+".pickle", "rb") as file:
                 return pickle.load(file)
-    
-    def save_data(self, data, name='data'):
+
+    @staticmethod    
+    def save_data(data, name='data'):
         with open(name+".pickle", "wb+") as file:
             pickle.dump(data, file)
+
