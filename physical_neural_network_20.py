@@ -45,39 +45,42 @@ class PINN:
         input = [Input(shape=1) for _ in range(input_shape)]
         x = input[0]
         y = input[1]
-        Re = input[5]
+        #Re = input[5]
+        Re = input[2]
 
         conc = Concatenate()(input)
 
         psi = network_func(conc, hidden_layers, 'Psi')
-        p_x = network_func(conc, hidden_layers, 'P_x')
-        p_y = network_func(conc, hidden_layers, 'P_y')
+        # p_x = network_func(conc, hidden_layers, 'P_x')
+        # p_y = network_func(conc, hidden_layers, 'P_y')
 
         u = gradient(psi, y, name='u')
         v = gradient(-psi, x, name='v')
 
         u_x = gradient(u, x, name='u_x')
-        u_y = gradient(u, y, name='u_y')
-        u_xx = gradient(u_x, x, name='u_xx')
-        u_yy = gradient(u_y, y, name='u_yy')
+        # u_y = gradient(u, y, name='u_y')
+        # u_xx = gradient(u_x, x, name='u_xx')
+        # u_yy = gradient(u_y, y, name='u_yy')
 
-        v_x = gradient(v, x, name='v_x')
+        # v_x = gradient(v, x, name='v_x')
         v_y = gradient(v, y, name='v_y')
-        v_xx = gradient(v_x, x, name='v_xx')
-        v_yy = gradient(v_y, y, name='v_yy')
+        # v_xx = gradient(v_x, x, name='v_xx')
+        # v_yy = gradient(v_y, y, name='v_yy')
 
-        def NS_func(z, name):
-            # f_u = (u*u_x + v*u_y) * Re + p_x - (u_xx + u_yy)
-            # f_v = (u*v_x + v*v_y) * Re + p_y - (v_xx + v_yy)
-            return Lambda(lambda z: ((z[0]*z[1]+z[2]*z[3])*z[4]+z[5]-(z[6]+z[7])), name=name)(z)
+        # def NS_func(z, name):
+        #     # f_u = (u*u_x + v*u_y) * Re + p_x - (u_xx + u_yy)
+        #     # f_v = (u*v_x + v*v_y) * Re + p_y - (v_xx + v_yy)
+        #     return Lambda(lambda z: ((z[0]*z[1]+z[2]*z[3])*z[4]+z[5]-(z[6]+z[7])), name=name)(z)
 
-        f_u = NS_func([u, u_x, v, u_y, Re, p_x, u_xx, u_yy], 'f_u')
-        f_v = NS_func([u, v_x, v, v_y, Re, p_y, v_xx, v_yy], 'f_v')
+        # f_u = NS_func([u, u_x, v, u_y, Re, p_x, u_xx, u_yy], 'f_u')
+        # f_v = NS_func([u, v_x, v, v_y, Re, p_y, v_xx, v_yy], 'f_v')
 
         continuity = Add(name='continuity')([u_x, v_y])
 
+        # self.neural_net = Model(inputs=input, outputs=[
+                                # psi, p_x, p_y, f_u, f_v, continuity], name="neural_net")
         self.neural_net = Model(inputs=input, outputs=[
-                                psi, p_x, p_y, f_u, f_v, continuity], name="neural_net")
+                                psi, continuity], name="neural_net")
 
         if summary:
             self.neural_net.summary()
@@ -115,11 +118,11 @@ if __name__ == "__main__":
 
     N_train = 200_000
     epoch = 100
-    batch_size = 1024
-    hidden_layers = 10*[20]
+    batch_size = 512
+    hidden_layers = 20*[64]
 
     # Load Data
-    dataset = utl.load_data('dataset')
+    dataset = utl.load_data('tiny_dataset')
 
     psi = dataset[0]  # L x N x N
     p_x = dataset[1]  # L x N x N
@@ -188,8 +191,10 @@ if __name__ == "__main__":
     # constraints
     c_train = np.zeros_like(s_train)
 
-    X_nn_train = [x_train, y_train, d_train, n_train, g_train, r_train]
-    y_nn_train = [s_train, px_train, py_train, c_train, c_train, c_train]
+    # X_nn_train = [x_train, y_train, d_train, n_train, g_train, r_train]
+    # y_nn_train = [s_train, px_train, py_train, c_train, c_train, c_train]
+    X_nn_train = [x_train, y_train, r_train]
+    y_nn_train = [s_train, c_train]
 
     # Test Data
     test_idx = np.setdiff1d(np.arange(N * N * L), train_idx)
@@ -208,11 +213,12 @@ if __name__ == "__main__":
 
     c_test = np.zeros_like(s_test)
 
-    X_nn_test = [x_test, y_test, d_test, n_test, g_test, r_test]
-    y_nn_test = [s_test, px_test, py_test, c_test, c_test, c_test]
-
+    # X_nn_test = [x_test, y_test, d_test, n_test, g_test, r_test]
+    #y_nn_test = [s_test, px_test, py_test, c_test, c_test, c_test]
+    X_nn_test = [x_test, y_test, r_test]
+    y_nn_test = [s_test, c_test]
     # Training
-    model = PINN(6, 1, hidden_layers, summary=True)
+    model = PINN(len(X_nn_train), 1, hidden_layers, summary=True)
 
     model.train(X_nn_train, y_nn_train, X_nn_test,
                 y_nn_test, epoch, batch_size)

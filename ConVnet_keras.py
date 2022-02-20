@@ -1,4 +1,5 @@
-
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 from DLD_env import DLD_env, Pillar
 from DLD_Utils import DLD_Utils as utl
 from keras.models import load_model
@@ -11,11 +12,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
 from sklearn.model_selection import train_test_split
-import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-
-# Initialize the utility class
-utl = utl()
 
 
 class ConvNet():
@@ -568,9 +564,6 @@ def Network_evaluation(D, N, G_X, G_R, Re, grid_size, dp, start_point):
     plt.show()
     uv = (u, v)
     #dld.simulate_particle(dp/(D+G_X), uv, pillar.pillars, start_point, periods=6, plot=True)
-
-    
-
 
 epoch_AutoE = 30
 batch_size_AutoE = 32
