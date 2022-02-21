@@ -44,10 +44,10 @@ plot_model(model, to_file='PINN_Base_plot.png', show_shapes=True, show_layer_nam
 # model.summary()
 
 x = np.linspace(-100, 100, 10001) / 100
-y = 20 * (x ** 2)
+y = x ** 2
 # dydx = 2 * x
-dydx = 20 * 2 * x
-dy2dx2 = np.ones_like(x) * 40
+dydx = 2 * x
+dy2dx2 = np.ones_like(x) * 2
 dy3dx3 = np.zeros_like(x)
 
 # x = np.linspace(1, 10, 10).reshape(10, 1)
@@ -55,10 +55,10 @@ dy3dx3 = np.zeros_like(x)
 
 model.compile(optimizer = tf.keras.optimizers.Adam(), loss='mse')
 
-hist = model.fit(x, [y, dydx, dy2dx2, dy3dx3], batch_size=256, epochs=400)
-model.save('model_quad_i.h5')
-# model.load_weights('model_quad_i.h5')
-y_pred = model.predict(x)
+# hist = model.fit(x, [y, dydx, dy2dx2, dy3dx3], batch_size=256, epochs=400)
+# model.save('model_quad_i.h5')
+model.load_weights('model_quad_i.h5')
+y_pred = model.predict(2*x)
 
 import matplotlib.pyplot as plt
 
@@ -76,3 +76,5 @@ plt.scatter(x, y_pred[2])
 plt.subplot(2, 2, 4)
 plt.scatter(x, y_pred[3])
 plt.show()
+
+print(model.predict([-10, -8, -4, -2, 1, 2, 4, 8, 10]))
