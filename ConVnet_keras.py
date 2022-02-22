@@ -570,7 +570,7 @@ batch_size_AutoE = 32
 epoch_DLDNN = 20
 batch_size_DLDNN = 32
 a, b = network_train(epoch_AutoE, batch_size_AutoE, epoch_DLDNN, batch_size_DLDNN,
-              AutoE_psi_train=False, AutoE_px_train=False, AutoE_py_train=False, DLDNN_train=True)
+              AutoE_psi_train=True, AutoE_px_train=False, AutoE_py_train=False, DLDNN_train=True)
 
 D = 20
 N = 5
