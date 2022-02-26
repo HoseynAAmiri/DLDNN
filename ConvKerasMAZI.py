@@ -116,7 +116,7 @@ class ConvNet():
         self.VSHloss = VSHloss
         encoded_shape = (7, 13, 16)
         ##########################################################
-        #                  u autoencoder                       #
+        #                  u autoencoder                         #
         ##########################################################
 
         encoder_input_u = layers.Input(
