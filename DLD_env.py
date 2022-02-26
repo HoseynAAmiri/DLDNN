@@ -108,20 +108,22 @@ class DLD_env:
             fig.add_subplot(1, 2, 1)
             periods = len(stream)
             step_data = np.zeros((periods, 2))
-            for i in range(periods):
-                plt.plot(stream[i][:, 0], stream[i][:, 1], color=(
-                    0.1, 0.2, 0.5, (i/periods+0.1)/1.1))
-
-                step_data[i] = [stream[i][0, 1], stream[i][-1, 1]]
 
             plt.xlim([0, 1])
             plt.ylim([0, 1])
-
             ax = plt.gca()
+            for i in range(periods):
+                s = ((ax.get_window_extent().width  / (1-0+1.) * 72./fig.dpi))*2*dp
+                plt.plot(stream[i][:, 0], stream[i][:, 1], color=(
+                    0.1, 0.2, 0.5, (i/periods+0.3)/1.3), marker='o', markevery=200, markersize=s)
+
+                step_data[i] = [stream[i][0, 1], stream[i][-1, 1]]
+
+
             for pillar in self.pillar.pillars:
+                # ax.add_patch(PolygonPatch(pillar.buffer(
+                #     dp/2).difference(pillar), fc='white', ec='#999999'))
                 ax.add_patch(PolygonPatch(pillar, fc='red'))
-                ax.add_patch(PolygonPatch(pillar.buffer(
-                    dp/2).difference(pillar), fc='white', ec='#999999'))
 
             fig.add_subplot(1, 2, 2)
             plt.plot(step_data[:, 0], step_data[:, 1])

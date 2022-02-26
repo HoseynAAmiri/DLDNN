@@ -3,9 +3,9 @@ from DLD_env import DLD_env, Pillar
 from DLD_Utils import DLD_Utils as utl
 
 
-data = np.genfromtxt("psi_p.csv", delimiter=",")
+data = np.genfromtxt("psi_p2.csv", delimiter=",")
 D = 20
-N = 10
+N = 5
 G_X = 40
 G_R = 1
 Re = 1
@@ -26,17 +26,15 @@ p_interp = utl.interp2grid(
 
 data2 = tuple([dld.x_grid.flatten(), dld.y_grid.flatten(), p_interp.flatten()])
 
-compare = True
+compare = False
 if compare:
     utl.compare_plots(data1, data2)
 
 v, u = utl.gradient(psi_interp, -dld.dx, dld.dy)
 
-
-# x0 = 0
-# y0 = 30/(D+G_X)
-# point0 = np.array([x0, y0])
-# periods = 20
-# d_particle = 13/(D+G_X)
-# stream = dld.simulate_particle(d_particle, (u, v), point0, periods=periods, plot=True)
-
+x0 = 0
+y0 = 45/(D+G_X)
+point0 = np.array([x0, y0])
+periods = 7
+d_particle = 10/(D+G_X)
+stream = dld.simulate_particle(d_particle, (u, v), point0, periods=periods, plot=True)
