@@ -32,6 +32,13 @@ if compare:
 
 v, u = utl.gradient(psi_interp, -dld.dx, dld.dy)
 
+# import matplotlib.pyplot as plt
+# plt.imshow(np.flip(psi_interp, axis=0), cmap='jet')
+# ax = plt.gca()
+# ax.get_xaxis().set_ticks([])
+# ax.get_yaxis().set_ticks([])
+# plt.show()
+
 x0 = 0
 y0 = 45/(D+G_X)
 point0 = np.array([x0, y0])
