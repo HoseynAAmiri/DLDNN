@@ -112,7 +112,7 @@ class DLD_env:
             plt.xlim([0, 1])
             plt.ylim([0, 1])
             ax = plt.gca()
-            plt.axis('off')
+
             for i in range(periods):
                 s = ((ax.get_window_extent().width  / (1-0+1.) * 72./fig.dpi))*2*dp
                 plt.plot(stream[i][:, 0], stream[i][:, 1], color=(
