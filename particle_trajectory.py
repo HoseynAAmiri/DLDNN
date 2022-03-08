@@ -55,7 +55,7 @@ def reflect(nn, wd, xp, yp, dp, up, vp):
             
             up = -(2*vp*nx*ny-up*(ny**2-nx**2))
             vp = -(2*up*nx*ny+vp*(ny**2-nx**2))
-    
+    # print(xp, yp)
     return up, vp
 
 
@@ -199,6 +199,8 @@ def _integrate_rk12(x0, y0, dmap, f):
         try:
             if dmap.grid.within_grid(xi, yi):
                 xyf_traj.append((xi, yi))
+                if len(xyf_traj)>3000:
+                    return stotal, xyf_traj             
             else:
                 raise OutOfBounds
 

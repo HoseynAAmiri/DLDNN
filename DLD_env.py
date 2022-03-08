@@ -95,6 +95,9 @@ class DLD_env:
         ny = ny / dist_mag
 
         stream = []
+        # mode equal 1 correspond to latral movement 
+        # mode equal -1 correspond to zigzag movement
+        mode = 1
         for i in range(periods):
             stream.append(ptj.streamplot((self.x_grid, self.y_grid), uv, (nx, ny), self.wd, dp, start_point))
 
@@ -102,6 +105,10 @@ class DLD_env:
                 start_point = stream[i][-1, :] - [1, 0]
             elif stream[i][-1, 1] <= 0.01:
                 start_point = stream[i][-1, :] + [0, 1]
+                mode = -1
+            elif len(stream[i])>3000:
+                mode = 0
+                break 
 
         if plot:
             fig = plt.figure(figsize=figsize)
@@ -133,7 +140,7 @@ class DLD_env:
 
             plt.show()
 
-        return stream
+        return stream, mode
 
 
 class Pillar:
