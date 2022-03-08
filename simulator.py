@@ -32,14 +32,6 @@ compare = False
 if compare:
     utl.compare_plots(data1, data2)
 
-# import matplotlib.pyplot as plt
-# plt.imshow(np.flip(psi_interp, axis=0), cmap='jet')
-# ax = plt.gca()
-# ax.get_xaxis().set_ticks([])
-# ax.get_yaxis().set_ticks([])
-# plt.show()
-
-
 x0 = 0
 y0 = 0.5
 point0 = np.array([x0, y0])
