@@ -164,7 +164,6 @@ class Pillar:
                                    (self.SIZE/2, -self.SIZE/2),
                                    (-self.SIZE/2, -self.SIZE/2),
                                    (-self.SIZE/2, self.SIZE/2)])
-
         else:
             raise ValueError("The input pillar type is invalid")
 
