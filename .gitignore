@@ -1,7 +1,7 @@
 waste.py
 waste2.py
 Data
+__pycache__
 *.rar
 *.pickle
 *.png
-__pycache__
