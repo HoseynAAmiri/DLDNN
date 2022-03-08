@@ -10,11 +10,11 @@ from DLD_Utils import DLD_Utils as utl
 
 
 class DLD_env:
-    def __init__(self, pillar, Re, RESOLUTION=(128, 128)):
+    def __init__(self, pillar, Re, resolution=(128, 128)):
 
         self.pillar = pillar
         self.Re = Re
-        self.RESOLUTION = RESOLUTION
+        self.RESOLUTION = resolution
         self.x_grid, self.y_grid, self.dx, self.dy = self.grid()
         self.wd = self.wall_distance()
 

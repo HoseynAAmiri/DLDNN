@@ -2,35 +2,30 @@ import numpy as np
 from DLD_env import DLD_env, Pillar
 from DLD_Utils import DLD_Utils as utl
 
+data = utl.load_data('dataset36')
 
-data = np.genfromtxt("psi_p2.csv", delimiter=",")
-D = 20
-N = 5
-G_X = 40
-G_R = 1
-Re = 1
 grid_size = (128, 128)
 
-pillar = Pillar(D, N, G_X, G_R)
+
+
+pillar = Pillar(f, N)
 dld = DLD_env(pillar, Re, resolution=grid_size)
 
 x_mapped, y_mapped = utl.parall2square(data[:, 0], data[:, 1], pillar)
 
-psi, p = data[:, 2], data[:, 3]
-data1 = tuple([x_mapped, y_mapped, p])
+u, v = data[:, 2], data[:, 3]
+data1 = tuple([x_mapped, y_mapped, u])
 
-psi_interp = utl.interp2grid(
-    x_mapped, y_mapped, psi, dld.x_grid, dld.y_grid, method='linear', recover=True)
-p_interp = utl.interp2grid(
-    x_mapped, y_mapped, p, dld.x_grid, dld.y_grid, method='linear', recover=True)
+u_interp = utl.interp2grid(
+    x_mapped, y_mapped, u, dld.x_grid, dld.y_grid, method='linear', recover=True)
+v_interp = utl.interp2grid(
+    x_mapped, y_mapped, v, dld.x_grid, dld.y_grid, method='linear', recover=True)
 
-data2 = tuple([dld.x_grid.flatten(), dld.y_grid.flatten(), p_interp.flatten()])
+data2 = tuple([dld.x_grid.flatten(), dld.y_grid.flatten(), u.flatten()])
 
-compare = False
+compare = True
 if compare:
     utl.compare_plots(data1, data2)
-
-v, u = utl.gradient(psi_interp, -dld.dx, dld.dy)
 
 # import matplotlib.pyplot as plt
 # plt.imshow(np.flip(psi_interp, axis=0), cmap='jet')
@@ -40,8 +35,8 @@ v, u = utl.gradient(psi_interp, -dld.dx, dld.dy)
 # plt.show()
 
 x0 = 0
-y0 = 45/(D+G_X)
-point0 = np.array([x0, y0])
+y0 = 0.5
+point0 = (x0, y0)
 periods = 7
-d_particle = 10/(D+G_X)
+d_particle = 0.1
 stream = dld.simulate_particle(d_particle, (u, v), point0, periods=periods, plot=True)
