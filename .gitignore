@@ -3,4 +3,5 @@ waste2.py
 Data
 *.rar
 *.pickle
+*.png
 __pycache__
