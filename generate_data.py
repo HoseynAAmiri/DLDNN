@@ -7,6 +7,7 @@ import numpy as np
 from DLD_env import Pillar
 from DLD_Utils import DLD_Utils as utl
 
+
 def generate_data(simulator, f, N, Re):
 
     data_size = len(f)*len(N)*len(Re)
@@ -40,7 +41,7 @@ def generate_data(simulator, f, N, Re):
     for ff in f:
         folder = cd + "\\Data\\D{}".format(ff)
         os.makedirs(folder)
-        for n in N:       
+        for n in N:
             for re in Re:
                 # Set study's parameters
                 param.set("f", str(ff))
@@ -60,8 +61,9 @@ def generate_data(simulator, f, N, Re):
                 pbar.update(1)
                 time.sleep(0.1)
 
+
 def compile_data(grid_size):
-# Changing raw data into data that are compatable to our neural network
+    # Changing raw data into data that are compatable to our neural network
     x_grid_size = grid_size[0]
     y_grid_size = grid_size[1]
 
@@ -90,7 +92,7 @@ def compile_data(grid_size):
         for name, p2 in zip(filesname, tqdm(range(len(filesname)))):
             data = np.genfromtxt(
                 folder_dir + "\\" + name + ".csv", delimiter=",")
-            
+
             label = list(map(float, name.split('_')))
             ff, n, re = label[0], label[1], label[2]
 
@@ -102,7 +104,7 @@ def compile_data(grid_size):
                 data[:, 0], data[:, 1], pillar)
 
             u_interp = utl.interp2grid(x_mapped, y_mapped, data[:, 2],
-                                         x_grid, y_grid, recover=True)
+                                       x_grid, y_grid, recover=True)
 
             v_interp = utl.interp2grid(x_mapped, y_mapped, data[:, 3],
                                        x_grid, y_grid, recover=True)
@@ -114,6 +116,7 @@ def compile_data(grid_size):
             time.sleep(0.1)
 
     return (np.array(dataset_u), np.array(dataset_v), np.array(labels))
+
 
 if __name__ == "__main__":
 

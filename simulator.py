@@ -3,6 +3,9 @@ from DLD_env import DLD_env, Pillar
 from DLD_Utils import DLD_Utils as utl
 
 # dataset = utl.load_data('dataset36')
+# u_interp = dataset[0][0]
+# v_interp = dataset[1][0]
+# f, N, Re = dataset[2][0]
 
 data = np.genfromtxt(".\\Data\\D0.2\\0.2_3_0.01.csv", delimiter=",")
 f = 0.2
@@ -42,4 +45,5 @@ y0 = 0.5
 point0 = np.array([x0, y0])
 periods = 7
 d_particle = 0.1
-stream = dld.simulate_particle(d_particle, (u_interp, v_interp), point0, periods=periods, plot=True)
+stream = dld.simulate_particle(
+    d_particle, (u_interp, v_interp), point0, periods=periods, plot=True)
