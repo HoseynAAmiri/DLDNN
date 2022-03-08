@@ -2,11 +2,6 @@ import numpy as np
 from DLD_env import DLD_env, Pillar
 from DLD_Utils import DLD_Utils as utl
 
-# dataset = utl.load_data('dataset36')
-# u_interp = dataset[0][0]
-# v_interp = dataset[1][0]
-# f, N, Re = dataset[2][0]
-
 data = np.genfromtxt(".\\Data\\D0.2\\0.2_3_0.01.csv", delimiter=",")
 f = 0.2
 N = 3
@@ -31,6 +26,11 @@ data2 = tuple([dld.x_grid.flatten(), dld.y_grid.flatten(), u_interp.flatten()])
 compare = False
 if compare:
     utl.compare_plots(data1, data2)
+
+# dataset = utl.load_data('dataset36')
+# u_interp = dataset[0][0]
+# v_interp = dataset[1][0]
+# f, N, Re = dataset[2][0]
 
 x0 = 0
 y0 = 0.5
