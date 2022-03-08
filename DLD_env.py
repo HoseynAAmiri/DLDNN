@@ -139,7 +139,7 @@ class DLD_env:
 class Pillar:
     # pillar class creates the domain from geometric parameters 
     # first one pillar is made then the other three are made accordingly. 
-    def __init__(self, size, N, G_R=1, pillar_type='circle', origin=(0,0)):
+    def __init__(self, size, N, G_X, G_R=1, pillar_type='circle', origin=(0,0)):
 
         self.size = size
         self.pillar_type = pillar_type
@@ -158,7 +158,7 @@ class Pillar:
         else: raise ValueError("The input pillar type is invalid")
         
         self.pillar = affinity.translate(self.pillar, xoff=origin[0], yoff=origin[1])
-        self.N, self.G_R = N, G_R
+        self.N, self.G_X, self.G_R = N, G_X, G_R
         
         # Other pillars are created automatically
         self.pillars = self.to_pillars()
@@ -167,9 +167,9 @@ class Pillar:
     def to_pillars(self):
     # The function creating other pillars from the initial one 
         pillar1 = self.pillar
-        pillar2 = affinity.translate(pillar1, xoff=1, yoff=(self.size+(1-self.size)*self.G_R)/self.N)
-        pillar3 = affinity.translate(pillar1, yoff=(self.size+(1-self.size)*self.G_R))
-        pillar4 = affinity.translate(pillar2, yoff=(self.size+(1-self.size)*self.G_R))
+        pillar2 = affinity.translate(pillar1, xoff=self.size+self.G_X, yoff=(self.size+self.G_X*self.G_R)/self.N)
+        pillar3 = affinity.translate(pillar1, yoff=(self.size+self.G_X*self.G_R))
+        pillar4 = affinity.translate(pillar2, yoff=(self.size+self.G_X*self.G_R))
 
         pillar1s = affinity.skew(
             pillar1, ys=-atan(1/self.N), origin=(0, 0), use_radians=True)
@@ -180,7 +180,16 @@ class Pillar:
         pillar4s = affinity.skew(
             pillar4, ys=-atan(1/self.N), origin=(0, 0), use_radians=True)
 
-        pillars = [pillar1s, pillar2s, pillar3s, pillar4s]
+        pillar1ss = affinity.scale(
+            pillar1s, xfact=1/(self.size+self.G_X), yfact=1/(self.size+self.G_X*self.G_R), zfact=1.0, origin=(0, 0))
+        pillar2ss = affinity.scale(
+            pillar2s, xfact=1/(self.size+self.G_X), yfact=1/(self.size+self.G_X*self.G_R), zfact=1.0, origin=(0, 0))
+        pillar3ss = affinity.scale(
+            pillar3s, xfact=1/(self.size+self.G_X), yfact=1/(self.size+self.G_X*self.G_R), zfact=1.0, origin=(0, 0))
+        pillar4ss = affinity.scale(
+            pillar4s, xfact=1/(self.size+self.G_X), yfact=1/(self.size+self.G_X*self.G_R), zfact=1.0, origin=(0, 0))
+
+        pillars = [pillar1ss, pillar2ss, pillar3ss, pillar4ss]
 
         return pillars
     
