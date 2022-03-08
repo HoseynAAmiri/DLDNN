@@ -10,18 +10,18 @@ from DLD_Utils import DLD_Utils as utl
 
 
 class DLD_env:
-    def __init__(self, pillar, Re, resolution=(128, 128)):
+    def __init__(self, pillar, Re, RESOLUTION=(128, 128)):
 
         self.pillar = pillar
         self.Re = Re
-        self.resolution = resolution
+        self.RESOLUTION = RESOLUTION
         self.x_grid, self.y_grid, self.dx, self.dy = self.grid()
         self.wd = self.wall_distance()
 
     def grid(self, grid_size=None):
         # the grid configuration for this modeling is set in this function
         if not grid_size:
-            grid_size = self.resolution
+            grid_size = self.RESOLUTION
 
         x_grid_size = grid_size[0]
         y_grid_size = grid_size[1]
@@ -57,8 +57,8 @@ class DLD_env:
         domain_y_grid = self.y_grid.flatten()[domain_idx]
 
         wall_distance = np.zeros_like(self.x_grid)
-        size_x = self.resolution[0]
-        size_y = self.resolution[1]
+        size_x = self.RESOLUTION[0]
+        size_y = self.RESOLUTION[1]
 
         for x, y in zip(domain_x_grid, domain_y_grid):
             r = int(y * size_y)
@@ -149,21 +149,21 @@ class DLD_env:
 class Pillar:
     # pillar class creates the domain from geometric parameters
     # first pillar is made then the other three are made accordingly
-    def __init__(self, size, N, G_R=1, pillar_type='circle', origin=(0, 0)):
+    def __init__(self, SIZE, N, G_R=1, pillar_type='circle', origin=(0, 0)):
 
-        self.size = size
+        self.SIZE = SIZE
         self.pillar_type = pillar_type
 
         geometry_types = {'circle': 0, 'square': 1}
 
         if geometry_types.get(pillar_type) == 0:
-            self.pillar = Point(origin).buffer(self.size/2)
+            self.pillar = Point(origin).buffer(self.SIZE/2)
 
         elif geometry_types.get(pillar_type) == 1:
-            self.pillar = Polygon([(self.size/2, self.size/2),
-                                   (self.size/2, -self.size/2),
-                                   (-self.size/2, -self.size/2),
-                                   (-self.size/2, self.size/2)])
+            self.pillar = Polygon([(self.SIZE/2, self.SIZE/2),
+                                   (self.SIZE/2, -self.SIZE/2),
+                                   (-self.SIZE/2, -self.SIZE/2),
+                                   (-self.SIZE/2, self.SIZE/2)])
 
         else:
             raise ValueError("The input pillar type is invalid")
@@ -179,11 +179,11 @@ class Pillar:
         # The function creating other pillars from the initial one
         pillar1 = self.pillar
         pillar2 = affinity.translate(pillar1, xoff=1, yoff=(
-            self.size+(1-self.size)*self.G_R)/self.N)
+            self.SIZE+(1-self.SIZE)*self.G_R)/self.N)
         pillar3 = affinity.translate(
-            pillar1, yoff=(self.size+(1-self.size)*self.G_R))
+            pillar1, yoff=(self.SIZE+(1-self.SIZE)*self.G_R))
         pillar4 = affinity.translate(
-            pillar2, yoff=(self.size+(1-self.size)*self.G_R))
+            pillar2, yoff=(self.SIZE+(1-self.SIZE)*self.G_R))
 
         pillar1s = affinity.skew(
             pillar1, ys=-atan(1/self.N), origin=(0, 0), use_radians=True)
@@ -195,13 +195,13 @@ class Pillar:
             pillar4, ys=-atan(1/self.N), origin=(0, 0), use_radians=True)
 
         pillar1ss = affinity.scale(
-            pillar1s, xfact=1.0, yfact=1/(self.size+(1-self.size)*self.G_R), zfact=1.0, origin=(0, 0))
+            pillar1s, xfact=1.0, yfact=1/(self.SIZE+(1-self.SIZE)*self.G_R), zfact=1.0, origin=(0, 0))
         pillar2ss = affinity.scale(
-            pillar2s, xfact=1.0, yfact=1/(self.size+(1-self.size)*self.G_R), zfact=1.0, origin=(0, 0))
+            pillar2s, xfact=1.0, yfact=1/(self.SIZE+(1-self.SIZE)*self.G_R), zfact=1.0, origin=(0, 0))
         pillar3ss = affinity.scale(
-            pillar3s, xfact=1.0, yfact=1/(self.size+(1-self.size)*self.G_R), zfact=1.0, origin=(0, 0))
+            pillar3s, xfact=1.0, yfact=1/(self.SIZE+(1-self.SIZE)*self.G_R), zfact=1.0, origin=(0, 0))
         pillar4ss = affinity.scale(
-            pillar4s, xfact=1.0, yfact=1/(self.size+(1-self.size)*self.G_R), zfact=1.0, origin=(0, 0))
+            pillar4s, xfact=1.0, yfact=1/(self.SIZE+(1-self.SIZE)*self.G_R), zfact=1.0, origin=(0, 0))
 
         pillars = [pillar1ss, pillar2ss, pillar3ss, pillar4ss]
 

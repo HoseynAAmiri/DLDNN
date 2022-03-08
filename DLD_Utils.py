@@ -16,7 +16,7 @@ class DLD_Utils:
         xy_mask, _ = pillar.to_mask(grid)
 
         x, y = self.square2parall(
-            xy_mask[:, 0], xy_mask[:, 1], 1/pillar.N, pillar.D, pillar.G_X, G_R=pillar.G_R)
+            xy_mask[:, 0], xy_mask[:, 1], pillar)
         xy_mask = np.concatenate(([x], [y])).T
 
         empty = np.empty((xy_mask.shape[0], data.shape[1]-xy_mask.shape[1]))
@@ -49,10 +49,8 @@ class DLD_Utils:
         y_mapped = y - slope * x
 
         # Domain transformation from rectangular to unitariy square
-        X_mapped_MAX = pillar.size + pillar.G_X
-        Y_mapped_MAX = pillar.size + pillar.G_X * pillar.G_R
+        Y_mapped_MAX = pillar.SIZE + (1 - pillar.SIZE) * pillar.G_R
 
-        x_mapped = x_mapped / X_mapped_MAX
         y_mapped = y_mapped / Y_mapped_MAX
 
         return x_mapped, y_mapped
@@ -62,15 +60,13 @@ class DLD_Utils:
         # This function transform data from unitary square into the original parallelogeram domain 
         slope = 1 / pillar.N
 
-        X_MAX = pillar.D + pillar.G_X
-        Y_MAX = pillar.D + pillar.G_X * pillar.G_R
+        Y_MAX = pillar.SIZE + (1 - pillar.SIZE) * pillar.G_R
 
         # Scaling square to rectangle
-        x_mapped = x * X_MAX
+        x_mapped = x
         y_mapped = y * Y_MAX
 
         # Mapping rectangle to parallelogram by shear transformation
-        x_mapped = x_mapped
         y_mapped = y_mapped + slope * x_mapped
 
         return x_mapped, y_mapped
