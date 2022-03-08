@@ -118,12 +118,12 @@ def compile_data(grid_size):
 if __name__ == "__main__":
 
 
-    ff = [10, 20, 30, 40, 50]
+    f = [10, 20, 30, 40, 50]
     N = [3, 5, 7, 9]
     RE = [0.01, 0.1, 0.2, 0.4, 0.8, 1]
     grid_size = (128, 128)
 
-    generate_data('DLD_COMSOL.mph', D, N, G, RE)
+    generate_data('DLD_COMSOL.mph', f, N, RE)
 
     dataset = compile_data(grid_size)
     utl.save_data(dataset, 'dataset')
