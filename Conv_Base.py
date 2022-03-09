@@ -76,6 +76,20 @@ class DLD_Net:
             self.dataset_norm[0][test_ix]),np.nan_to_num(
                 self.dataset_norm[1][test_ix]), np.nan_to_num(
                     self.dataset_norm[2][test_ix])
+    def analyse_data(self, field, field_norm, n):
+        idx = np.random.choice(len(self.dataset_norm[0]), size=n, replace=False)
+        plt.figure()
+        for i in range(len(idx)):
+            plt.subplot(2, len(idx), i+1)
+            plt.imshow(np.flip(field[idx[i]], axis=0))
+            plt.colorbar()
+            plt.jet()
+            plt.subplot(2, len(idx), i+1+len(idx))
+            plt.imshow(np.flip(field_norm[idx[i]], axis=0))
+            plt.colorbar()
+            plt.jet()
+        plt.show()
+
 
     def create_model(self, summary):
         # Neural Network 
@@ -365,15 +379,15 @@ class DLD_Net:
 test_frac = 0.2
 dataset_name = "dataset2288"
 NN = DLD_Net(test_frac, dataset_name)
-
+NN.analyse_data(NN.dataset[0], NN.dataset_norm[0], 3)
 summary = False
-NN.create_model(summary)
+# NN.create_model(summary)
 
 epoch = 100
 N_EPOCH = 5
 batch_size = 64
 lr = 0.0002
-NN.train(epoch, N_EPOCH, batch_size, lr)
+# NN.train(epoch, N_EPOCH, batch_size, lr)
 # NN.DLDNN.load_weights(NN.checkpoint_filepath)
 
 
