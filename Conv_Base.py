@@ -43,7 +43,9 @@ class DLD_Net:
         self.maxu = np.max(np.abs(dataset[0]), axis=(1, 2), keepdims=True)
         self.maxv = np.max(np.abs(dataset[1]), axis=(1, 2), keepdims=True)
         
+        # Global Max
         # self.max_vel = np.max((np.max(self.maxu), np.max(self.maxv)), axis=0)
+        
         # Local MAX
         self.max_vel = np.max((self.maxu, self.maxv), axis=0)
 
@@ -60,7 +62,6 @@ class DLD_Net:
         
         
         # Spiliting data to train test sections
-        
         train_ix = np.random.choice(len(self.dataset_norm[0]), size=int(
             (1-test_frac)*len(self.dataset_norm[0])), replace=False)
         
@@ -83,8 +84,7 @@ class DLD_Net:
             X1 = layers.Dense(label_expansion_layer, activation="relu")(input[:, 0:1])
             X2 = layers.Dense(label_expansion_layer, activation="relu")(input[:, 1:2])
             X3 = layers.Dense(label_expansion_layer, activation="relu")(input[:, 2:3])
-            X4 = layers.Dense(label_expansion_layer, activation="relu")(input[:, 3:4])
-            X = layers.Concatenate(axis=1)([X1, X2, X3, X4])
+            X = layers.Concatenate(axis=1)([X1, X2, X3])
 
             X = layers.Dense(512, activation="relu")(X)
             X = layers.Dense(512, activation="relu")(X)
@@ -185,8 +185,7 @@ class DLD_Net:
     def display(self, Ground_truth, predicted, num_data=3, streamline=True):
     
         # Displays 'num_data' random images from each one of the supplied arrays.
-        # Data should be normalized between -1 to 1
-        
+        # Data should be normalized between -1 to 1 
         indices = np.random.randint(len(Ground_truth), size=num_data)
         images1 = Ground_truth[indices, :]
         images2 = predicted[indices, :]
@@ -238,7 +237,7 @@ class DLD_Net:
         x1 = 0.05
         x2 = 0.95
 
-        _, modex1 = dld.simulate_particle(x1*G_X/(D+G_X), uv, (0, (D/2+x1*G_X/2)/(D+G_X)), periods, plot=False)
+        _, modex1 = dld.simulate_particle(x1*G_X, uv, (0, (D/2+x1*G_X/2)/(D+G)), periods, plot=False)
         _, modex2 = dld.simulate_particle(x2*G_X/(D+G_X), uv, (0, (D/2+x2*G_X/2)/(D+G_X)), periods, plot=False)
 
         if modex1 == 0:
@@ -293,10 +292,10 @@ class DLD_Net:
             pillar = Pillar(D, N, G_X, G_R)
             dld = DLD_env(pillar, Re, resolution=self.grid_size)
             
-            uv_gt = (u_gt[i], v_gt[i]-u_gt[i]/N)
+            uv_gt = (u_gt[i], v_gt[i])
             d_gt.append(self.critical_dia(D, G_X, uv_gt, dld, 1, 0.01))
             
-            uv_pred = (u_pred[i], v_pred[i]-u_pred[i]/N)
+            uv_pred = (u_pred[i], v_pred[i])
 
             d_pred.append(self.critical_dia(D, G_X, uv_pred, dld, 1, 0.01))
             pbar.update(1)
@@ -319,13 +318,11 @@ class DLD_Net:
 
         u, v = self.DLDNN.predict(input[None, :])
         u = u[0, :, :, 0]
-        v = v[0, :, :, 0]  - u / pillar.N
+        v = v[0, :, :, 0]
         uv = (u, v)
 
-        # u_gt = self.u_test[label_number]
-        # v_gt = self.v_test[label_number] - u_gt / pillar.N
-        u_gt = self.dataset_norm[0][14]
-        v_gt = self.dataset_norm[1][14] - u_gt / pillar.N       
+        u_gt = self.u_test[label_number]
+        v_gt = self.v_test[label_number]      
         uv_gt = (u_gt, v_gt)
     
         plt.figure()
@@ -366,18 +363,18 @@ class DLD_Net:
 
 
 test_frac = 0.2
-dataset_name = "R10_50_uv_dataset"
+dataset_name = "dataset2288"
 NN = DLD_Net(test_frac, dataset_name)
 
 summary = False
 NN.create_model(summary)
 
-epoch = 150
-N_EPOCH = 25
-batch_size = 8
+epoch = 100
+N_EPOCH = 5
+batch_size = 64
 lr = 0.0002
-# NN.train(epoch, N_EPOCH, batch_size, lr)
-NN.DLDNN.load_weights(NN.checkpoint_filepath)
+NN.train(epoch, N_EPOCH, batch_size, lr)
+# NN.DLDNN.load_weights(NN.checkpoint_filepath)
 
 
 # label_number = 0
@@ -386,4 +383,4 @@ NN.DLDNN.load_weights(NN.checkpoint_filepath)
 # start_point = (0, 0.25+0.8515624999999999/4)
 # NN.strmline_comparison(label_number, dp, periods, start_point)
 
-NN.network_evaluation(1)
+# NN.network_evaluation(0.1)
