@@ -39,7 +39,7 @@ def generate_data(simulator, f, N, Re):
 
     pbar = tqdm(total=data_size, position=0, leave=True)
     for ff in f:
-        folder = cd + "\\Data\\D{}".format(ff)
+        folder = cd + "\\Data\\f{}".format(ff)
         os.makedirs(folder)
         for n in N:
             for re in Re:
