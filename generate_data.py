@@ -53,7 +53,7 @@ def generate_data(simulator, f, N, Re):
 
                 # Export data
                 filename = cd + \
-                    "\\Data\\D{}\\{}_{}_{}.csv".format(
+                    "\\Data\\f{}\\{}_{}_{}.csv".format(
                         ff, ff, n, re)
                 result.export("data1").set("filename", filename)
                 result.export("data1").run()
@@ -120,12 +120,12 @@ def compile_data(grid_size):
 
 if __name__ == "__main__":
 
-    f = [0.2, 0.5, 0.8]
-    N = [3, 5, 7, 9]
-    RE = [0.01, 0.1, 1]
+    f = np.round(np.linspace(0.25, 0.75, 26), 2).tolist()
+    N = [3, 4, 5, 6, 7, 8, 9, 10]
+    RE = [0.01, 0.1, 0.5, 1, 2.5, 5, 7.5, 10, 15, 20, 25]
     grid_size = (128, 128)
 
     generate_data('DLD_COMSOL.mph', f, N, RE)
 
     dataset = compile_data(grid_size)
-    utl.save_data(dataset, 'dataset')
+    utl.save_data(dataset, 'dataset2288')
