@@ -1,6 +1,7 @@
 waste.py
 waste2.py
 Data
+tmp
 __pycache__
 *.rar
 *.pickle

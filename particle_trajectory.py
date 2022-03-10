@@ -199,7 +199,7 @@ def _integrate_rk12(x0, y0, dmap, f):
         try:
             if dmap.grid.within_grid(xi, yi):
                 xyf_traj.append((xi, yi))
-                if len(xyf_traj)>10000:
+                if len(xyf_traj)>3000:
                     return stotal, xyf_traj             
             else:
                 raise OutOfBounds

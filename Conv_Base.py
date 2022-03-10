@@ -249,40 +249,37 @@ class DLD_Net:
         D = f
         G_X= 1-f
         
-        x1 = 0.05
-        x2 = 0.95
+        x1 = 0.1
+        x2 = 0.9
 
         _, modex1 = dld.simulate_particle(x1*G_X, uv, (0, (D/2+x1*G_X/2)), periods, plot=False)
         _, modex2 = dld.simulate_particle(x2*G_X, uv, (0, (D/2+x2*G_X/2)), periods, plot=False)
 
-        if modex1 == 0:
-            return x1
-        elif modex2 == 0:
-            return x2
-        elif modex1 * modex2 < 0:
+        if modex1 == -1 and modex2 == -1:
+            return 1
+
+        elif modex1 == -1 and modex2 == 1:
            
             while True:
-                
-                x = (x1 + x2) * 0.5
-                
+
                 if (x2 - x1) < tolerance:
                     break
 
+                x = (x1 + x2) * 0.5
                 _, modex = dld.simulate_particle(x*G_X, uv, (0, (D/2+x*G_X/2)), periods, plot=False)
                 
-                if modex1 * modex <0:
+                if modex == 1:
                     x2 = x
                     modex2 = modex
                 else:
                     x1 = x
                     modex1 = modex
-                if modex == 0:
-                    return x
+                # if modex == 0:
+                #     return x
         else:
             x = 0 
 
         return x
-
 
     def network_evaluation(self, plot_frac):
          # specify the fraction of data you want your graph to be drawn        
@@ -400,8 +397,11 @@ class DLD_Net:
     
         plt.show()
     
-        self.dld.simulate_particle(dp*(1-f), uv, start_point, periods, plot=True)
-        self.dld.simulate_particle(dp*(1-f), uv_gt, start_point, periods, plot=True)
+        s1, m1 = self.dld.simulate_particle(dp*(1-f), uv, start_point, periods, plot=True)
+        s2, m2 = self.dld.simulate_particle(dp*(1-f), uv_gt, start_point, periods, plot=True)
+
+        print(len(s1[-1]), m1)
+        print(len(s2[-1]), m2)
 
 
 test_frac = 0.2
@@ -420,15 +420,15 @@ NN.create_model(summary)
 
 NN.DLDNN.load_weights(NN.checkpoint_filepath)
 
-# eval_data = NN.network_evaluation(0.01)
-# import csv
-# with open('eval_data.csv', 'w') as file:
-#     writer = csv.writer(file)
-#     writer.writerows(eval_data)
-    
-label_number = 436
-f, _, _ = NN.dataset[2][label_number] 
-dp = 0.95
-periods = 1
-start_point = (0, f/2+dp*(1-f)/2)
-NN.strmline_comparison(label_number, dp, periods, start_point)
+eval_data = NN.network_evaluation(0.01)
+import csv
+with open('eval_data.csv', 'w') as file:
+    writer = csv.writer(file)
+    writer.writerows(eval_data)
+
+# label_number = 1525
+# f, _, _ = NN.dataset[2][label_number] 
+# dp = 0.05
+# periods = 1
+# start_point = (0, f/2+dp*(1-f)/2)
+# NN.strmline_comparison(label_number, dp, periods, start_point)
