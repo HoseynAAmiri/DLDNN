@@ -34,7 +34,6 @@ class DLD_Net:
         self.dx = xx[1] - xx[0]
         self.dy = yy[1] - yy[0]
         
-        self.G_R = 1
         # loading data
         dataset = utl.load_data(dataset_name)
         self.dataset = utl.load_data(dataset_name)
@@ -102,17 +101,17 @@ class DLD_Net:
 
             X = layers.Dense(512, activation="relu")(X)
             X = layers.Dense(512, activation="relu")(X)
-            X = layers.Dense(16*16*32)(X)
+            X = layers.Dense(16*16*64)(X)
             X = layers.ReLU()(X)
 
-            X = layers.Reshape((16, 16, 32))(X)
+            X = layers.Reshape((16, 16, 64))(X)
 
-            X = layers.Conv2D(32, (3, 3),
+            X = layers.Conv2D(128, (3, 3),
                 padding="same")(X)
             X = layers.ReLU()(X)
 
             X = layers.UpSampling2D((2, 2))(X)
-            X = layers.Conv2D(64, (3, 3),
+            X = layers.Conv2D(128, (3, 3),
                 padding="same")(X)
             X = layers.ReLU()(X)
 
@@ -246,13 +245,15 @@ class DLD_Net:
         plt.close()
         return indices
     
-    def critical_dia(self, D, G_X, uv, dld, periods, tolerance):
+    def critical_dia(self, f, uv, dld, periods, tolerance):
+        D = f
+        G_X= 1-f
         
         x1 = 0.05
         x2 = 0.95
 
-        _, modex1 = dld.simulate_particle(x1*G_X, uv, (0, (D/2+x1*G_X/2)/(D+G)), periods, plot=False)
-        _, modex2 = dld.simulate_particle(x2*G_X/(D+G_X), uv, (0, (D/2+x2*G_X/2)/(D+G_X)), periods, plot=False)
+        _, modex1 = dld.simulate_particle(x1*G_X, uv, (0, (D/2+x1*G_X/2)), periods, plot=False)
+        _, modex2 = dld.simulate_particle(x2*G_X, uv, (0, (D/2+x2*G_X/2)), periods, plot=False)
 
         if modex1 == 0:
             return x1
@@ -267,7 +268,7 @@ class DLD_Net:
                 if (x2 - x1) < tolerance:
                     break
 
-                _, modex = dld.simulate_particle(x*G_X/(D+G_X), uv, (0, (D/2+x*G_X/2)/(D+G_X)), periods, plot=False)
+                _, modex = dld.simulate_particle(x*G_X, uv, (0, (D/2+x*G_X/2)), periods, plot=False)
                 
                 if modex1 * modex <0:
                     x2 = x
@@ -281,6 +282,7 @@ class DLD_Net:
             x = 0 
 
         return x
+
 
     def network_evaluation(self, plot_frac):
          # specify the fraction of data you want your graph to be drawn        
@@ -298,28 +300,52 @@ class DLD_Net:
         
         d_gt = []
         d_pred = []
-
-        pbar = tqdm(total=len(u_gt), position=0, leave=True)
-        for i in range(len(u_gt)):
-            D, N, G_X, Re = labels[i]
-            G_R = self.G_R
-            pillar = Pillar(D, N, G_X, G_R)
+        
+        pbar = tqdm(total=len(labels_norm), position=0, leave=True)
+        for i in range(len(labels_norm)):
+            f, N, Re = labels[i]
+            
+            pillar = Pillar(f, N)
             dld = DLD_env(pillar, Re, resolution=self.grid_size)
             
             uv_gt = (u_gt[i], v_gt[i])
-            d_gt.append(self.critical_dia(D, G_X, uv_gt, dld, 1, 0.01))
+            d_gt.append(self.critical_dia(f, uv_gt, dld, 1, 0.01))
             
             uv_pred = (u_pred[i], v_pred[i])
 
-            d_pred.append(self.critical_dia(D, G_X, uv_pred, dld, 1, 0.01))
+            d_pred.append(self.critical_dia(f, uv_pred, dld, 1, 0.01))
             pbar.update(1)
             time.sleep(0.1)
     
         plt.figure()
+        plt.subplot(2, 2, 1)
         plt.scatter(d_pred, d_gt, c=np.array(d_gt)-np.array(d_pred))
         plt.colorbar()
         plt.plot([0, 1], [0, 1])
+        
+        plt.subplot(2, 2, 2)
+        plt.scatter(labels[:, 0], d_gt)
+        plt.scatter(labels[:, 0], d_pred)
+        plt.xlabel('f')
+        plt.ylabel('Critical Diameter')
+        plt.legend(['GT', 'Prediction'], loc='upper left')
+
+        plt.subplot(2, 2, 3)
+        plt.scatter(labels[:, 1], d_gt)
+        plt.scatter(labels[:, 1], d_pred)
+        plt.xlabel('N')
+        plt.ylabel('Critical Diameter')
+        plt.legend(['GT', 'Prediction'], loc='upper left')
+
+        plt.subplot(2, 2, 4)
+        plt.scatter(labels[:, 2], d_gt)
+        plt.scatter(labels[:, 2], d_pred)
+        plt.xlabel('Re')
+        plt.ylabel('Critical Diameter')
+        plt.legend(['GT', 'Prediction'], loc='upper left')
+
         plt.show()
+        return d_gt, d_pred, labels
 
         
     def strmline_comparison(self, label_number, dp, periods, start_point):
@@ -379,22 +405,23 @@ class DLD_Net:
 test_frac = 0.2
 dataset_name = "dataset2288"
 NN = DLD_Net(test_frac, dataset_name)
-NN.analyse_data(NN.dataset[0], NN.dataset_norm[0], 3)
+# NN.analyse_data(NN.dataset[0], NN.dataset_norm[0], 3)
+
 summary = False
-# NN.create_model(summary)
+NN.create_model(summary)
 
-epoch = 100
-N_EPOCH = 5
-batch_size = 64
-lr = 0.0002
-# NN.train(epoch, N_EPOCH, batch_size, lr)
-# NN.DLDNN.load_weights(NN.checkpoint_filepath)
+# epoch = 100
+# N_EPOCH = 5
+# batch_size = 64
+# lr = 0.0002
+# # NN.train(epoch, N_EPOCH, batch_size, lr)
 
+NN.DLDNN.load_weights(NN.checkpoint_filepath)
+
+eval_data = NN.network_evaluation(0.05)
 
 # label_number = 0
 # dp = 0.8515624999999999*10
 # periods = 1
 # start_point = (0, 0.25+0.8515624999999999/4)
 # NN.strmline_comparison(label_number, dp, periods, start_point)
-
-# NN.network_evaluation(0.1)
