@@ -420,15 +420,15 @@ NN.create_model(summary)
 
 NN.DLDNN.load_weights(NN.checkpoint_filepath)
 
-eval_data = NN.network_evaluation(0.01)
-import csv
-with open('eval_data.csv', 'w') as file:
-    writer = csv.writer(file)
-    writer.writerows(eval_data)
+# eval_data = NN.network_evaluation(0.01)
+# import csv
+# with open('eval_data.csv', 'w') as file:
+#     writer = csv.writer(file)
+#     writer.writerows(eval_data)
 
-# label_number = 1525
-# f, _, _ = NN.dataset[2][label_number] 
-# dp = 0.05
-# periods = 1
-# start_point = (0, f/2+dp*(1-f)/2)
-# NN.strmline_comparison(label_number, dp, periods, start_point)
+label_number = 2287
+f, _, _ = NN.dataset[2][label_number] 
+dp = 0.05
+periods = 1
+start_point = (0, f/2+dp*(1-f)/2)
+NN.strmline_comparison(label_number, dp, periods, start_point)
