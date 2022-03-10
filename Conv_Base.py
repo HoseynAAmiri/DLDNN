@@ -328,32 +328,37 @@ class DLD_Net:
         plt.scatter(labels[:, 0], d_pred)
         plt.xlabel('f')
         plt.ylabel('Critical Diameter')
-        plt.legend(['GT', 'Prediction'], loc='upper left')
+        plt.legend(['GT', 'Prediction'], loc='upper right')
 
         plt.subplot(2, 2, 3)
         plt.scatter(labels[:, 1], d_gt)
         plt.scatter(labels[:, 1], d_pred)
         plt.xlabel('N')
         plt.ylabel('Critical Diameter')
-        plt.legend(['GT', 'Prediction'], loc='upper left')
+        plt.legend(['GT', 'Prediction'], loc='upper right')
 
         plt.subplot(2, 2, 4)
         plt.scatter(labels[:, 2], d_gt)
         plt.scatter(labels[:, 2], d_pred)
         plt.xlabel('Re')
         plt.ylabel('Critical Diameter')
-        plt.legend(['GT', 'Prediction'], loc='upper left')
-
+        plt.legend(['GT', 'Prediction'], loc='upper right')
+        
+        plt.savefig('eval_data.png')
         plt.show()
-        return d_gt, d_pred, labels
+        return np.array([idx, labels[:,0], labels[:,1], labels[:,2], d_gt, d_pred]).T
 
         
     def strmline_comparison(self, label_number, dp, periods, start_point):
     
-        input = self.label_test[label_number]
-        D, N, G_X, Re = input * self.MAX[1]
-        G_R = self.G_R
-        pillar = Pillar(D, N, G_X, G_R)
+        u_gt = self.dataset_norm[0][label_number]
+        v_gt = self.dataset_norm[1][label_number]      
+        uv_gt = (u_gt, v_gt)
+    
+        input = self.dataset_norm[2][label_number]
+        f, N, Re = input * self.MAX[1]
+
+        pillar = Pillar(f, N)
         self.dld = DLD_env(pillar, Re, resolution=self.grid_size)
 
         u, v = self.DLDNN.predict(input[None, :])
@@ -361,45 +366,42 @@ class DLD_Net:
         v = v[0, :, :, 0]
         uv = (u, v)
 
-        u_gt = self.u_test[label_number]
-        v_gt = self.v_test[label_number]      
-        uv_gt = (u_gt, v_gt)
     
         plt.figure()
         plt.subplot(3,2,1)
-        plt.imshow(np.flip(u, axis=0))
+        plt.imshow(np.flip(u_gt, axis=0))
         plt.colorbar()
         plt.jet()
         
         plt.subplot(3,2,3)
-        plt.imshow(np.flip(u_gt, axis=0)) 
+        plt.imshow(np.flip(u, axis=0)) 
         plt.colorbar()
         plt.jet()
     
         plt.subplot(3,2,5)
-        plt.imshow(np.flip(np.abs(u_gt-u), axis=0)) 
+        plt.imshow(np.flip(u_gt-u, axis=0)) 
         plt.colorbar()
         plt.jet()
     
         plt.subplot(3,2,2)
-        plt.imshow(np.flip(v, axis=0)) 
-        plt.colorbar()
-        plt.jet()
-    
-        plt.subplot(3,2,4)
         plt.imshow(np.flip(v_gt, axis=0)) 
         plt.colorbar()
         plt.jet()
     
+        plt.subplot(3,2,4)
+        plt.imshow(np.flip(v, axis=0)) 
+        plt.colorbar()
+        plt.jet()
+    
         plt.subplot(3,2,6)
-        plt.imshow(np.flip(np.abs(v_gt-v), axis=0)) 
+        plt.imshow(np.flip(v_gt-v, axis=0)) 
         plt.colorbar()
         plt.jet()
     
         plt.show()
     
-        self.dld.simulate_particle(dp/(D+G_X), uv, start_point, periods, plot=True)
-        self.dld.simulate_particle(dp/(D+G_X), uv_gt, start_point, periods, plot=True)
+        self.dld.simulate_particle(dp*(1-f), uv, start_point, periods, plot=True)
+        self.dld.simulate_particle(dp*(1-f), uv_gt, start_point, periods, plot=True)
 
 
 test_frac = 0.2
@@ -418,10 +420,15 @@ NN.create_model(summary)
 
 NN.DLDNN.load_weights(NN.checkpoint_filepath)
 
-eval_data = NN.network_evaluation(0.05)
-
-# label_number = 0
-# dp = 0.8515624999999999*10
-# periods = 1
-# start_point = (0, 0.25+0.8515624999999999/4)
-# NN.strmline_comparison(label_number, dp, periods, start_point)
+# eval_data = NN.network_evaluation(0.01)
+# import csv
+# with open('eval_data.csv', 'w') as file:
+#     writer = csv.writer(file)
+#     writer.writerows(eval_data)
+    
+label_number = 436
+f, _, _ = NN.dataset[2][label_number] 
+dp = 0.95
+periods = 1
+start_point = (0, f/2+dp*(1-f)/2)
+NN.strmline_comparison(label_number, dp, periods, start_point)

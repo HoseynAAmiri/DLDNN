@@ -110,7 +110,7 @@ class DLD_env:
             elif stream[i][-1, 1] <= 0.01:
                 start_point = stream[i][-1, :] + [0, 1]
                 mode = -1
-            elif len(stream[i]) > 3000:
+            elif len(stream[i]) > 10000:
                 mode = 0
                 break
 
