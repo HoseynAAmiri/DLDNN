@@ -106,7 +106,7 @@ class DLD_Net:
 
             X = layers.Reshape((16, 16, 64))(X)
 
-            X = layers.Conv2D(128, (3, 3),
+            X = layers.Conv2D(64, (3, 3),
                 padding="same")(X)
             X = layers.ReLU()(X)
 
@@ -314,7 +314,7 @@ class DLD_Net:
             pbar.update(1)
             time.sleep(0.1)
     
-        plt.figure()
+        plt.figure(figsize=(15, 10))
         plt.subplot(2, 2, 1)
         plt.scatter(d_pred, d_gt, c=np.array(d_gt)-np.array(d_pred))
         plt.colorbar()
@@ -420,15 +420,15 @@ NN.create_model(summary)
 
 NN.DLDNN.load_weights(NN.checkpoint_filepath)
 
-# eval_data = NN.network_evaluation(0.01)
+# eval_data = NN.network_evaluation(0.2)
 # import csv
 # with open('eval_data.csv', 'w') as file:
 #     writer = csv.writer(file)
 #     writer.writerows(eval_data)
 
-label_number = 2287
+label_number = 2227
 f, _, _ = NN.dataset[2][label_number] 
-dp = 0.05
+dp = 0.1
 periods = 1
 start_point = (0, f/2+dp*(1-f)/2)
 NN.strmline_comparison(label_number, dp, periods, start_point)
