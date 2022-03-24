@@ -22,7 +22,7 @@ np.random.seed(1234)
 tf.random.set_seed(1234)
 
 class DLD_Net:
-    def __init__(self, test_frac, dataset_name):
+    def __init__(self):
         self.checkpoint_filepath = './tmp/checkpoint'
         x_grid_size = 128
         y_grid_size = 128
@@ -34,49 +34,8 @@ class DLD_Net:
         self.dx = xx[1] - xx[0]
         self.dy = yy[1] - yy[0]
         
-        # loading data
-        dataset = utl.load_data(dataset_name)
-        self.dataset = utl.load_data(dataset_name)
-        # Normilizing data and saving the Normilized value
-        
-        self.maxu = np.max(np.abs(dataset[0]), axis=(1, 2), keepdims=True)
-        self.maxv = np.max(np.abs(dataset[1]), axis=(1, 2), keepdims=True)
-        
-        # Global Max
-        # self.max_vel = np.max((np.max(self.maxu), np.max(self.maxv)), axis=0)
-        
-        # Local MAX
-        self.max_vel = np.max((self.maxu, self.maxv), axis=0)
-
-        self.max_label = np.max(dataset[2], axis=0)
-        
-        self.MAX = []
-        self.MAX.append(self.max_vel)
-        self.MAX.append(self.max_label)
-        
-        self.dataset_norm = []
-        self.dataset_norm.append(dataset[0]/ self.MAX[0])
-        self.dataset_norm.append(dataset[1]/ self.MAX[0])
-        self.dataset_norm.append(dataset[2]/ self.MAX[1])
-        
-        
-        # Spiliting data to train test sections
-        train_ix = np.random.choice(len(self.dataset_norm[0]), size=int(
-            (1-test_frac)*len(self.dataset_norm[0])), replace=False)
-        
-        test_ix = np.setdiff1d(np.arange(len(self.dataset_norm[0])), train_ix)
-
-        self.u_train, self.v_train, self.label_train = np.nan_to_num(
-            self.dataset_norm[0][train_ix]),np.nan_to_num(
-                self.dataset_norm[1][train_ix]), np.nan_to_num(
-                    self.dataset_norm[2][train_ix])
-        
-        self.u_test, self.v_test, self.label_test = np.nan_to_num(
-            self.dataset_norm[0][test_ix]),np.nan_to_num(
-                self.dataset_norm[1][test_ix]), np.nan_to_num(
-                    self.dataset_norm[2][test_ix])
     def analyse_data(self, field, field_norm, n):
-        idx = np.random.choice(len(self.dataset_norm[0]), size=n, replace=False)
+        idx = np.random.choice(len(field_norm[0]), size=n, replace=False)
         plt.figure()
         for i in range(len(idx)):
             plt.subplot(2, len(idx), i+1)
@@ -90,7 +49,7 @@ class DLD_Net:
         plt.show()
 
 
-    def create_model(self, summary):
+    def create_model(self, label_train, summary):
         # Neural Network 
         label_expansion_layer = 16
         def GenNet(input):
@@ -147,7 +106,7 @@ class DLD_Net:
 
             return  X
 
-        input = layers.Input(shape=self.label_train[0].shape,  name="labels")
+        input = layers.Input(shape=label_train[0].shape,  name="labels")
         u = GenNet(input)
         v = GenNet(input)
         self.DLDNN = Model(inputs=input, outputs=[v, u], name="DLDNN")
@@ -157,7 +116,8 @@ class DLD_Net:
 
 
     
-    def train(self, epoch, N_EPOCH, batch_size, lr ):
+    def train(self, u_train, v_train, label_train, u_test, v_test, label_test,
+     epoch, N_EPOCH, batch_size, lr ):
         
         opt = keras.optimizers.Adam(learning_rate=lr, beta_1=0.5)
         self.DLDNN.compile(optimizer=opt, loss='mse')
@@ -165,22 +125,22 @@ class DLD_Net:
         class myCallback(keras.callbacks.Callback):
             def on_epoch_end(self, epoch, logs=None):
                 if (epoch+1) % N_EPOCH == 0:
-                    u_DLD, v_DLD = DLD_self.DLDNN.predict(DLD_self.label_test)
+                    u_DLD, v_DLD = DLD_self.DLDNN.predict(label_test)
                     u_DLD = u_DLD[:, :, :, 0]
                     v_DLD = v_DLD[:, :, :, 0]
-                    DLD_self.display(DLD_self.u_test, u_DLD)
-                    DLD_self.display(DLD_self.v_test, v_DLD)
+                    DLD_self.display(u_test, u_DLD)
+                    DLD_self.display(v_test, v_DLD)
                     # DLD_self.DLDNN.save('models/model_DLDNN_R10_50_{}.h5'.format(epoch))
         tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir="./logs")
         cp_callback = tf.keras.callbacks.ModelCheckpoint(filepath=self.checkpoint_filepath, monitor='val_loss', mode='min', save_best_only=True, save_weights_only=True, verbose=1)
         callback_list = [myCallback(), tensorboard_callback, cp_callback]
         history = self.DLDNN.fit(
-            x=self.label_train,
-            y=[self.u_train, self.v_train],
+            x=label_train,
+            y=[u_train, v_train],
             epochs=epoch,
             batch_size=batch_size,
             shuffle=False,
-            validation_data=(self.label_test, [self.u_test, self.v_test]),
+            validation_data=(label_test, [u_test, v_test]),
             callbacks=callback_list)
         
         
@@ -250,7 +210,7 @@ class DLD_Net:
         G_X= 1-f
         
         x1 = 0.1
-        x2 = 0.9
+        x2 = 0.95
 
         _, modex1 = dld.simulate_particle(x1*G_X, uv, (0, (D/2+x1*G_X/2)), periods, plot=False)
         _, modex2 = dld.simulate_particle(x2*G_X, uv, (0, (D/2+x2*G_X/2)), periods, plot=False)
@@ -281,16 +241,16 @@ class DLD_Net:
 
         return x
 
-    def network_evaluation(self, plot_frac):
+    def network_evaluation(self, plot_frac, dataset_norm, MAX):
          # specify the fraction of data you want your graph to be drawn        
         
-        numElems = int(np.floor(plot_frac * len(NN.dataset_norm[0])))
-        idx = np.round(np.linspace(0, len(self.dataset_norm[0]) - 1, numElems)).astype(int)
+        numElems = int(np.floor(plot_frac * len(dataset_norm[0])))
+        idx = np.round(np.linspace(0, len(dataset_norm[0]) - 1, numElems)).astype(int)
         
-        u_gt = self.dataset_norm[0][idx]
-        v_gt = self.dataset_norm[1][idx]
-        labels_norm = self.dataset_norm[2][idx] 
-        labels = labels_norm * self.MAX[1]
+        u_gt = dataset_norm[0][idx]
+        v_gt = dataset_norm[1][idx]
+        labels_norm = dataset_norm[2][idx] 
+        labels = labels_norm * MAX[1]
         u_pred, v_pred = self.DLDNN.predict(labels_norm)
         u_pred = u_pred[:, :, :, 0]
         v_pred = v_pred[:, :, :, 0]
@@ -346,14 +306,14 @@ class DLD_Net:
         return np.array([idx, labels[:,0], labels[:,1], labels[:,2], d_gt, d_pred]).T
 
         
-    def strmline_comparison(self, label_number, dp, periods, start_point):
+    def strmline_comparison(self, dataset_norm, MAX, label_number, dp, periods, start_point):
     
-        u_gt = self.dataset_norm[0][label_number]
-        v_gt = self.dataset_norm[1][label_number]      
+        u_gt = dataset_norm[0][label_number]
+        v_gt = dataset_norm[1][label_number]      
         uv_gt = (u_gt, v_gt)
     
-        input = self.dataset_norm[2][label_number]
-        f, N, Re = input * self.MAX[1]
+        input = dataset_norm[2][label_number]
+        f, N, Re = input * MAX[1]
 
         pillar = Pillar(f, N)
         self.dld = DLD_env(pillar, Re, resolution=self.grid_size)
@@ -404,31 +364,3 @@ class DLD_Net:
         print(len(s2[-1]), m2)
 
 
-test_frac = 0.2
-dataset_name = "dataset2288"
-NN = DLD_Net(test_frac, dataset_name)
-# NN.analyse_data(NN.dataset[0], NN.dataset_norm[0], 3)
-
-summary = False
-NN.create_model(summary)
-
-# epoch = 100
-# N_EPOCH = 5
-# batch_size = 64
-# lr = 0.0002
-# # NN.train(epoch, N_EPOCH, batch_size, lr)
-
-NN.DLDNN.load_weights(NN.checkpoint_filepath)
-
-eval_data = NN.network_evaluation(0.2)
-import csv
-with open('eval_data.csv', 'w') as file:
-    writer = csv.writer(file)
-    writer.writerows(eval_data)
-
-# label_number = 2227
-# f, _, _ = NN.dataset[2][label_number] 
-# dp = 0.1
-# periods = 1
-# start_point = (0, f/2+dp*(1-f)/2)
-# NN.strmline_comparison(label_number, dp, periods, start_point)
