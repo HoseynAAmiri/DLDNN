@@ -49,7 +49,7 @@ class DLD_Net:
         plt.show()
 
 
-    def create_model(self, label_train, summary):
+    def create_model(self, label_shape, summary):
         # Neural Network 
         label_expansion_layer = 16
         def GenNet(input):
@@ -106,7 +106,7 @@ class DLD_Net:
 
             return  X
 
-        input = layers.Input(shape=label_train[0].shape,  name="labels")
+        input = layers.Input(shape=label_shape,  name="labels")
         u = GenNet(input)
         v = GenNet(input)
         self.DLDNN = Model(inputs=input, outputs=[v, u], name="DLDNN")

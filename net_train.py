@@ -33,8 +33,8 @@ dataset_norm = []
 dataset_norm.append(dataset[0]/ MAX[0])
 dataset_norm.append(dataset[1]/ MAX[0])
 dataset_norm.append(dataset[2]/ MAX[1])
-        
-        
+
+       
 # Spiliting data to train test sections
 train_ix = np.random.choice(len(dataset_norm[0]), size=int(
     (1-test_frac)*len(dataset_norm[0])), replace=False)
@@ -55,7 +55,8 @@ u_test, v_test, label_test = np.nan_to_num(
 NN = DLD_Net()
 # NN.analyse_data(dataset[0], dataset_norm[0], 3)
 
-NN.create_model(label_train, summary)
+label_shape = label_train[0].shape
+NN.create_model(label_shape, summary)
 
 # NN.train(u_train, v_train, label_train, u_test, v_test, label_test, epoch, N_EPOCH, batch_size, lr)
 
