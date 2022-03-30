@@ -3,41 +3,25 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-from Conv_Base import DLD_Net
-from DLD_env import DLD_env, Pillar
+from keras.models import load_model
 from pymoo.core.problem import ElementwiseProblem
 from pymoo.core.callback import Callback
 from pymoo.algorithms.moo.nsga3 import NSGA3
 from pymoo.factory import get_reference_directions
 from pymoo.optimize import minimize
 from pymoo.visualization.scatter import Scatter
-NN = DLD_Net()
 
 d1 = 0.1
 d2 = 0.5
 mean_d = (d1+d2)/2
 
-label_shape = (3,)
-summary = False
-NN.create_model(label_shape, summary)
-NN.DLDNN.load_weights(NN.checkpoint_filepath)
-
-def Surrogate_model(f, N, Re , NN):
-    labels = np.array((f , N, Re))
-    labels_Max = np.array((0.75, 10, 25)) 
-    labels_norm = labels / labels_Max
-    u_pred, v_pred = NN.DLDNN.predict(labels_norm[None, :])
-    u_pred = u_pred[0, :, :, 0]
-    v_pred = v_pred[0, :, :, 0]
-    
-    pillar = Pillar(f, N)
-    dld = DLD_env(pillar, Re, resolution = NN.grid_size)
-
-    uv_pred = (u_pred, v_pred)
-    d_crt = NN.critical_dia(f, uv_pred, dld, 1, 0.01)
-            
-    return d_crt
-
+DNN = load_model('DNN_model_hlayers5_nodes_8.h5')
+input = np.array((0.1, 0.1, 0.1))
+input = input[None, :]
+DNN.summary()
+x = DNN(input)
+print(x)
+''''
 # create the reference directions to be used for the optimization
 ref_dirs = get_reference_directions("das-dennis", 3, n_partitions=5)
 
@@ -64,7 +48,7 @@ class Problemwrapper(ElementwiseProblem):
         self.mean_d = mean_d
 
     def _evaluate(self, x, out, *args, **kwargs):
-        d_crt = Surrogate_model(x[0], x[1], x[2] , NN)
+        d_crt = DNN(x[0], x[1], x[2] )
         f1 = np.abs(d_crt - self.mean_d)
         f2 = 1 / x[2]
         f3 = x[0]
@@ -85,3 +69,4 @@ plt.show()
 
 Scatter().add(res.F).show()
 
+'''
