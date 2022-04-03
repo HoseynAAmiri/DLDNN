@@ -120,12 +120,17 @@ def compile_data(grid_size):
 
 if __name__ == "__main__":
 
-    f = np.round(np.linspace(0.25, 0.75, 26), 2).tolist()
-    N = [3, 4, 5, 6, 7, 8, 9, 10]
-    RE = [0.01, 0.1, 0.5, 1, 2.5, 5, 7.5, 10, 15, 20, 25]
-    grid_size = (128, 128)
+    # f = np.round(np.linspace(0.25, 0.75, 26), 2).tolist()
+    # N = [3, 4, 5, 6, 7, 8, 9, 10]
+    # RE = [0.01, 0.1, 0.5, 1, 2, 3, 4, 5, 6, 8, 10, 12.5, 15, 17.5, 20, 22.5, 25]
+    # grid_size = (128, 128)
 
-    generate_data('DLD_COMSOL.mph', f, N, RE)
+# data  test with integer N
+    f = np.round(np.linspace(0.25, 0.75, 10), 2).tolist()
+    N = [3, 4, 5, 6]
+    RE = [0.05, 1.5, 6.5, 8.5, 12.5, 18.5]
+    grid_size = (128, 128)
+    # generate_data('DLD_COMSOL.mph', f, N, RE)
 
     dataset = compile_data(grid_size)
-    utl.save_data(dataset, 'dataset2288')
+    utl.save_data(dataset, 'dataset_test_int')

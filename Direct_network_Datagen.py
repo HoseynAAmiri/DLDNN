@@ -9,7 +9,7 @@ from DLD_env import DLD_env, Pillar
 # load CNN 
 NN = DLD_Net()
 # Load data
-dataset_name = "dataset2288"
+dataset_name = "dataset_test_int"
 dataset = utl.load_data(dataset_name)
 D = np.zeros((len(dataset[2]),1))
 
@@ -32,4 +32,4 @@ for i in range(len(dataset[2])):
 # Create dataset
 new_dataset = (dataset[2], D)
 # Save the new dataset
-utl.save_data(new_dataset, 'direct_dataset2288')
+utl.save_data(new_dataset, 'direct_dataset_test_int')

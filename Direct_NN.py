@@ -13,10 +13,10 @@ np.random.seed(1234)
 tf.random.set_seed(1234)
 
 # Network Parameters
-test_frac = 0.2
-epoch = 500
+test_frac = 0.4
+epoch = 1000
 batch_size = 32
-lr = 0.01
+lr = 0.001
 summary = False
 
 # Import the data 
@@ -38,8 +38,8 @@ test_ix = np.setdiff1d(np.arange(len(dataset_norm[0])), train_ix)
 X_train, y_train = dataset_norm[0][train_ix], dataset_norm[1][train_ix]
 X_test, y_test = dataset_norm[0][test_ix], dataset_norm[1][test_ix]
 
-hidden_layers = [ 3, 4, 5, 6]
-nodes = [8, 10, 16, 32]
+hidden_layers = [10]
+nodes = [8 , 10, 16, 32, 64]
 
 os.mkdir('history')
 for hidden_layer in hidden_layers:
@@ -47,9 +47,12 @@ for hidden_layer in hidden_layers:
 
         def netgen(input, hidden_layer, node):
             for i in range(hidden_layer):
-                X = layers.Dense(node, activation="relu")(input)
-                X = layers.Dense(node, activation="relu")(X)
-            X = layers.Dense(1, activation="linear")(X)
+                if i==0:
+                    X = layers.Dense(node, activation="relu")(input)
+                else:
+                    X = layers.Dense(node, activation="relu")(X)
+                    # X = layers.Dropout(0.2)(X)
+            X = layers.Dense(1, activation="sigmoid")(X)
             return X
 
         input = layers.Input(shape=X_train[0].shape,  name="labels")
