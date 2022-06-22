@@ -13,14 +13,14 @@ np.random.seed(1234)
 tf.random.set_seed(1234)
 
 # Network Parameters
-test_frac = 0.4
+test_frac = 0.3
 epoch = 1000
 batch_size = 32
-lr = 0.001
+lr = 0.0001
 summary = False
 
 # Import the data 
-dataset_name = "direct_dataset2288"
+dataset_name = "direct_dataset10400"
 dataset = utl.load_data(dataset_name)
 
 # Normalizing the data
@@ -38,8 +38,8 @@ test_ix = np.setdiff1d(np.arange(len(dataset_norm[0])), train_ix)
 X_train, y_train = dataset_norm[0][train_ix], dataset_norm[1][train_ix]
 X_test, y_test = dataset_norm[0][test_ix], dataset_norm[1][test_ix]
 
-hidden_layers = [10]
-nodes = [8 , 10, 16, 32, 64]
+hidden_layers = [4, 5, 6, 8 ,10]
+nodes = [8 , 10, 16, 32, 64, 128]
 
 os.mkdir('history')
 for hidden_layer in hidden_layers:

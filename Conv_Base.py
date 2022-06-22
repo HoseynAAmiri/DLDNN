@@ -53,23 +53,25 @@ class DLD_Net:
         # Neural Network 
         label_expansion_layer = 16
         def GenNet(input):
+            # Expand input 
             X1 = layers.Dense(label_expansion_layer, activation="relu")(input[:, 0:1])
             X2 = layers.Dense(label_expansion_layer, activation="relu")(input[:, 1:2])
             X3 = layers.Dense(label_expansion_layer, activation="relu")(input[:, 2:3])
             X = layers.Concatenate(axis=1)([X1, X2, X3])
-
+            # FCNN layers
             X = layers.Dense(512, activation="relu")(X)
             X = layers.Dense(512, activation="relu")(X)
             X = layers.Dense(16*16*64)(X)
             X = layers.ReLU()(X)
-
+            # Reshape to mactch convolutional layer
             X = layers.Reshape((16, 16, 64))(X)
-
             X = layers.Conv2D(64, (3, 3),
                 padding="same")(X)
             X = layers.ReLU()(X)
 
+            # 1
             X = layers.UpSampling2D((2, 2))(X)
+            
             X = layers.Conv2D(128, (3, 3),
                 padding="same")(X)
             X = layers.ReLU()(X)
@@ -77,8 +79,9 @@ class DLD_Net:
             X = layers.Conv2D(128, (3, 3),
                 padding="same")(X)
             X = layers.ReLU()(X)
-
+            # 2
             X = layers.UpSampling2D((2, 2))(X)
+            
             X = layers.Conv2D(128, (3, 3),
                 padding="same")(X)
             X = layers.ReLU()(X)
@@ -91,8 +94,9 @@ class DLD_Net:
                 padding="same")(X)
             X = layers.ReLU()(X)
 
-
+            # 4
             X = layers.UpSampling2D((2, 2))(X)
+            
             X = layers.Conv2D(128, (3, 3),
                 padding="same")(X)
             X = layers.ReLU()(X)
@@ -109,7 +113,7 @@ class DLD_Net:
         input = layers.Input(shape=label_shape,  name="labels")
         u = GenNet(input)
         v = GenNet(input)
-        self.DLDNN = Model(inputs=input, outputs=[v, u], name="DLDNN")
+        self.DLDNN = Model(inputs=input, outputs=[u, v], name="DLDNN")
 
         if summary:
             self.DLDNN.summary() 

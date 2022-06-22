@@ -11,7 +11,7 @@ epoch = 100
 N_EPOCH = 5
 batch_size = 64
 lr = 0.0002
-summary = False
+summary = True
 
 # loading data
 dataset_name = "dataset2288"
@@ -62,11 +62,16 @@ NN.create_model(label_shape, summary)
 
 NN.DLDNN.load_weights(NN.checkpoint_filepath)
 
-# eval_data = NN.network_evaluation(0.01, dataset_norm, MAX)
-# import csv
-# with open('eval_data.csv', 'w') as file:
-#     writer = csv.writer(file)
-#     writer.writerows(eval_data)
+dataset_norm_test = []
+dataset_norm_test.append(dataset_norm[0][test_ix])
+dataset_norm_test.append(dataset_norm[1][test_ix])
+dataset_norm_test.append(dataset_norm[2][test_ix])
+
+#eval_data = NN.network_evaluation(1, dataset_norm_test, MAX)
+#import csv
+#with open('eval_data.csv', 'w') as file:
+#    writer = csv.writer(file)
+#    writer.writerows(eval_data)
 
 # label_number = 2227
 # f, _, _ = NN.dataset[2][label_number] 
@@ -74,15 +79,16 @@ NN.DLDNN.load_weights(NN.checkpoint_filepath)
 # periods = 1
 # start_point = (0, f/2+dp*(1-f)/2)
 # NN.strmline_comparison(label_number, dp, periods, start_point)
+##############################################################
+############### test network for data that it never seen #####
+##############################################################
 
-# test network for data that it never seen
-
-## f = np.round(np.linspace(0.25, 0.75, 10), 2).tolist()
-##    N = [3.5, 4.5, 5.5, 6.5]
-##    RE = [0.05, 3, 6, 8, 12, 18]
+# f = np.round(np.linspace(0.25, 0.75, 10), 2).tolist()
+# N = [3.5, 4.5, 5.5, 6.5]
+# RE = [0.05, 3, 6, 8, 12, 18]
 
 # loading data
-dataset_name = "dataset_test"
+dataset_name = "dataset_test_int"
 dataset = utl.load_data(dataset_name)
 
 # Normilizing data and saving the Normilized value        
@@ -106,9 +112,9 @@ dataset_norm.append(dataset[2]/ MAX[1])
 
 NN.analyse_data(dataset[0], dataset_norm[0], 3)
 
-eval_data = NN.network_evaluation(1, dataset_norm, MAX)
+eval_data = NN.network_evaluation(0.1, dataset_norm, MAX)
 import csv
-with open('eval_data_test.csv', 'w') as file:
+with open('eval_data_test_int.csv', 'w') as file:
     writer = csv.writer(file)
     writer.writerows(eval_data)
 
