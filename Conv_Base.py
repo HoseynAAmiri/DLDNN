@@ -158,6 +158,7 @@ class DLD_Net:
         plt.legend(['train', 'test'], loc='upper left')
         plt.show()
 
+        np.save('history', history.history)
         
     def display(self, Ground_truth, predicted, num_data=3, streamline=True):
     
