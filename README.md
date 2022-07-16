@@ -6,12 +6,14 @@ The figure blow shows the design automation process in DLDNN platform. First a s
 Afeter reciving inputs the multi-objective algorithm (NSGA3) Creates the population by mutatins and crossovers. Afterward the f, N, and Re goes through the pre-trained ANN to predict the critical diameter(D_c) the G which is the gap between pillars is used for mapping and re scaling porpuses cause all the fields are normalized for neural network training. By extracting critical diamter the cost function can be calculated and the convergence criteria can be checked.
 Algorithm outputs the optimum f, N, Re, G, and bandwidth. bandwidth is the difference between tha maximum and minimum critical diameter of a particular device and it is used for an index if flexibilty and stability. In addition to the outputs by using pre-trained convolutional neural network DLDNN provides the ability for simulating particles trajectories. it should be noted that the number of periods for particles trajectories simulation must be specified.
 
+For more information check: link will be added soon
+
 ![2-Design Automation](https://user-images.githubusercontent.com/97515569/179344205-92cddf73-6da5-44d6-9d3e-daed59f4f94e.png)
 
 ## Files Descriptions
-- DLD_utils.py:
-- DLD_env.py:
-- particle_trajectory.py:
+- DLD_utils.py: Containing the function for extracting data from numerical simulation and mapping the generated field
+- DLD_env.py: Containing the function for post processing the data from numerical simulation 
+- particle_trajectory.py: simulate particle trajectory by having the velocity fields in horizontal and vertical direction
 
 
 - generate_data.py: Dataset generation for concolutional neural network
