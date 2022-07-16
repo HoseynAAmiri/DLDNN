@@ -10,3 +10,12 @@ Algorithm outputs the optimum f, N, Re, G, and bandwidth. bandwidth is the diffe
 
 ## Files Descriptions
 
+###CNN
+generate_data.py : Dataset generation for concolutional neural network
+Conv_base. py : The convolutional neural network class containng the network architecture
+Conv_net_train. py : The training process of Conculutional neural network
+
+
+
+
+
