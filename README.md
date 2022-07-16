@@ -9,11 +9,21 @@ Algorithm outputs the optimum f, N, Re, G, and bandwidth. bandwidth is the diffe
 ![2-Design Automation](https://user-images.githubusercontent.com/97515569/179344205-92cddf73-6da5-44d6-9d3e-daed59f4f94e.png)
 
 ## Files Descriptions
+- DLD_utils.py:
+- DLD_env.py:
+- particle_trajectory.py:
 
-* CNN
-- generate_data.py : Dataset generation for concolutional neural network
-- Conv_base. py : The convolutional neural network class containng the network architecture
-- Conv_net_train. py : The training process of Conculutional neural network
+
+- generate_data.py: Dataset generation for concolutional neural network
+- Conv_base.py: The convolutional neural network class containng the network architecture
+- Conv_net_train.py: The training process of Conculutional neural network
+
+- Direct_network_generate_data.py: Gets the labels to fileds dataset and change it into filed to critical diameter datset
+- Direct_NN.py: The  fully conncted neural network class containing structure of the neural network, trainng process
+
+- Design_Aut.py: Main code of the design automation platform
+
+- DNN_model_hlayers8_nodes_128.h5: the trained Direct neural network wights and bais 
 
 
 
