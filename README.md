@@ -11,21 +11,24 @@ For more information check: link will be added soon
 ![2-Design Automation](https://user-images.githubusercontent.com/97515569/179344205-92cddf73-6da5-44d6-9d3e-daed59f4f94e.png)
 
 ## Files Descriptions
+###### utility functions 
 - DLD_utils.py: Containing the function for extracting data from numerical simulation and mapping the generated field
 - DLD_env.py: Containing the function for post processing the data from numerical simulation 
 - particle_trajectory.py: simulate particle trajectory by having the velocity fields in horizontal and vertical direction
 
-
+###### Concolutional Neural Network
 - generate_data.py: Dataset generation for concolutional neural network
 - Conv_base.py: The convolutional neural network class containng the network architecture
 - Conv_net_train.py: The training process of Conculutional neural network
+- Temp9: The file is not available in the repository it is accessable through this Link(https://drive.google.com/drive/folders/1--o_9SYRY1sq_FOjo_ogZG6z_9ejrwNq?usp=sharing)
 
+###### Fully Connceted Neural Network 
 - Direct_network_generate_data.py: Gets the labels to fileds dataset and change it into filed to critical diameter datset
 - Direct_NN.py: The  fully conncted neural network class containing structure of the neural network, trainng process
-
+- - DNN_model_hlayers8_nodes_128.h5: The trained Direct neural network wights and bais 
+###### Design Automation 
 - Design_Aut.py: Main code of the design automation platform
 
-- DNN_model_hlayers8_nodes_128.h5: the trained Direct neural network wights and bais 
 
 
 
