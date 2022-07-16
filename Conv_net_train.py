@@ -15,7 +15,7 @@ lr = 0.0002
 summary = False
 train = False
 dev = False
-test = True
+test = False
 
 
 ### loading data ###
@@ -59,7 +59,7 @@ u_test, v_test, label_test = np.nan_to_num(
 
 ### load network class ###
 NN = DLD_Net()
-# NN.analyse_data(dataset[0], dataset_norm[0], 3)
+NN.analyse_data(dataset[0], dataset_norm[0], 3)
 
 label_shape = label_train[0].shape
 NN.create_model(label_shape, summary)
@@ -119,15 +119,15 @@ if test:
 
     NN.analyse_data(dataset[0], dataset_norm[0], 3)
 
-    # eval_data = NN.network_evaluation(0.1, dataset_norm, MAX)
-    # import csv
-    # with open('eval_data_test_int.csv', 'w') as file:
-    #     writer = csv.writer(file)
-    #     writer.writerows(eval_data)
+    eval_data = NN.network_evaluation(1, dataset_norm, MAX)
+    import csv
+    with open('eval_data_test_int.csv', 'w') as file:
+        writer = csv.writer(file)
+        writer.writerows(eval_data)
 
-    label_number = 20
-    f, _, _ = dataset[2][label_number] 
-    dp = 0.2
-    periods = 1
-    start_point = (0, f/2+dp*(1-f)/2)
-    NN.strmline_comparison(dataset_norm, MAX, label_number, dp, periods, start_point)
+    # label_number = 20
+    # f, _, _ = dataset[2][label_number] 
+    # dp = 0.2
+    # periods = 1
+    # start_point = (0, f/2+dp*(1-f)/2)
+    # NN.strmline_comparison(dataset_norm, MAX, label_number, dp, periods, start_point)

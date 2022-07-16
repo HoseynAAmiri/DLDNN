@@ -51,7 +51,7 @@ for hidden_layer in hidden_layers:
                     X = layers.Dense(node, activation="relu")(input)
                 else:
                     X = layers.Dense(node, activation="relu")(X)
-                    # X = layers.Dropout(0.2)(X)
+                    #X = layers.Dropout(0.1)(X)
             X = layers.Dense(1, activation="sigmoid")(X)
             return X
 
