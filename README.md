@@ -1,6 +1,7 @@
 # DLDNN
 A Neural Network Model for DLD Design and Simulation
 DLDNN is design automation platform for deterministic lateral displacement (DLD) device that incorporates the power of neural network and multi-objective genetic algorithm.
-## Design automation
-
+## Design Automation
+The figure blow shows the design automation process in DLDNN platform. First a set of inputs consisting D_1, and D_2, which are the diameter of particles to be separated, desired condition to be applied on f, N, Re and finally the desired ratio between flexibility and stability of the design. By knowing the inputs the algorithm tune the parameters f, N, Re, and G in order to satisfy the optimization objective which was set in input.The importance of using flexibility and stability index comes from the nature of the adjustable parameters.f and N are two geometrical parameters that can not be changed after fabricating the design. On the other hand, Re is a fluid characteristic that can be altered by simply adjusting the fluid flow. So, these to terms are introduced here to predict the range of the proposed design to cover a variety of critical diameter and its immunity to change it due to some fluctuation and fabrication inaccuracy.
+Afeter reciving inputs the multi-objective algorithm (NSGA3) Creates the population by mutatins and crossovers. Afterward the f, N, and Re goes through the pre-trained ANN to predict the critical diameter(D_c) the G which is the gap between pillars is used for mapping and re scaling porpuses cause all the fields are normalized for neural network training. By extracting critical diamter the cost function can be calculated
 ![2-Design Automation](https://user-images.githubusercontent.com/97515569/179344205-92cddf73-6da5-44d6-9d3e-daed59f4f94e.png)
