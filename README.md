@@ -16,8 +16,8 @@ For more information check: link will be added soon
 - DLD_env.py: Containing the function for post processing the data from numerical simulation 
 - particle_trajectory.py: simulate particle trajectory by having the velocity fields in horizontal and vertical direction
 
-###### Concolutional Neural Network
-- generate_data.py: Dataset generation for concolutional neural network
+###### Convolutional Neural Network
+- generate_data.py: Dataset generation for convolutional neural network
 - Conv_base.py: The convolutional neural network class containng the network architecture
 - Conv_net_train.py: The training process of Conculutional neural network
 - Temp9: The file is not available in the repository it is accessable through this Link(https://drive.google.com/drive/folders/1--o_9SYRY1sq_FOjo_ogZG6z_9ejrwNq?usp=sharing)
