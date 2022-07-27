@@ -25,7 +25,7 @@ For more information check: link will be added soon
 ###### Fully Connceted Neural Network 
 - Direct_network_generate_data.py: Gets the labels to fileds dataset and change it into filed to critical diameter datset
 - Direct_NN.py: The  fully conncted neural network class containing structure of the neural network, trainng process
-- - DNN_model_hlayers8_nodes_128.h5: The trained Direct neural network wights and bais 
+- DNN_model_hlayers8_nodes_128.h5: The trained Direct neural network wights and bais 
 ###### Design Automation 
 - Design_Aut.py: Main code of the design automation platform
 
