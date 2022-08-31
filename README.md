@@ -18,7 +18,7 @@ For more information check our [DLDNN](https://arxiv.org/abs/2208.14303) paper.
 - generate_data.py: Dataset generation for convolutional neural network
 - Conv_base.py: The convolutional neural network class containng the network architecture
 - Conv_net_train.py: The training process of Conculutional neural network
-- Temp9: The file is not available in the repository it is accessable through this Link(https://drive.google.com/drive/folders/1--o_9SYRY1sq_FOjo_ogZG6z_9ejrwNq?usp=sharing)
+- Temp9: The trained model of CNN. [Access Link](https://drive.google.com/drive/folders/1--o_9SYRY1sq_FOjo_ogZG6z_9ejrwNq?usp=sharing)
 
 ###### Fully Connceted Neural Network 
 - Direct_network_generate_data.py: Gets the labels to fileds dataset and change it into filed to critical diameter datset
@@ -27,6 +27,8 @@ For more information check our [DLDNN](https://arxiv.org/abs/2208.14303) paper.
 ###### Design Automation 
 - Design_Aut.py: Main code of the design automation platform
 
+###### Data-sets Availablity
+- If it is needed we can provide the data-sets that were used in this study.  
 
 
 
