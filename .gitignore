@@ -1,7 +1,8 @@
 waste.py
 waste2.py
 Data
-tmp
+tmp9
+
 __pycache__
 *.rar
 *.pickle
@@ -9,3 +10,4 @@ __pycache__
 *.csv
 *.png
 *.mph
+.venvDLDNN

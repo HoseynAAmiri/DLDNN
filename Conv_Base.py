@@ -12,7 +12,7 @@ from tensorflow.keras.layers import Lambda, Add, Concatenate, Flatten
 from tensorflow.keras.models import Model
 import numpy as np
 import matplotlib.pyplot as plt
-from keras.utils.vis_utils import plot_model
+from keras.utils import plot_model
 from keras.models import load_model
 from DLD_Utils import DLD_Utils as utl
 from DLD_env import DLD_env, Pillar
