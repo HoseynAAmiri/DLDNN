@@ -1,13 +1,14 @@
 # add the version for these libraries
 # python 3.9
-numpy==1.24.3
+numpy==1.22.4
 mph==1.2.3
 tqdm==4.65.0
-matplotlib==3.7.2
+matplotlib==3.5.2
 keras==2.13.1
-pymoo==0.6.0.1
+pymoo==0.5.0
 pandas==2.0.3
+openpyxl==3.1.2
 attrs== 21.3.0
-shapely==2.0.1
+shapely==1.8.2
 tensorflow==2.13.0
 descartes==1.1.0
